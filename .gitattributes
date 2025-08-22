@@ -1,0 +1,26 @@
+# Fuerza LF para todos los archivos de texto
+* text=auto eol=lf
+
+# Archivos Python siempre en LF
+*.py text eol=lf
+
+# Archivos de configuración / docs
+*.md  text eol=lf
+*.txt text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.toml text eol=lf
+*.ini text eol=lf
+
+# Scripts shell siempre LF
+*.sh text eol=lf
+
+# Evitar que Git intente normalizar binarios
+*.jpg binary
+*.png binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.exe binary
+*.dll binary

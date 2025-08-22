@@ -1,0 +1,25 @@
+# Entornos virtuales
+venv/
+.venv/
+.env/
+
+# Archivos de Python compilados
+__pycache__/
+*.pyc
+
+# Configuración de VS Code
+.vscode/
+
+# Cachés y salidas de pruebas
+.mypy_cache/
+.pytest_cache/
+
+# Archivos de logs
+*.log
+
+# Archivos en crudo
+gtzan/
+
+# Salidas de build
+build/
+dist/

@@ -1,0 +1,13 @@
+torch>=2.2
+torchaudio>=2.2
+librosa>=0.10
+soundfile
+numpy
+scikit-learn
+matplotlib
+tqdm
+tensorboard
+omegaconf
+pandas
+audiomentations
+pydub
