@@ -1,0 +1,14 @@
+pyproject.toml
+src/data/__init__.py
+src/data/dataset.py
+src/data/download_gztan.py
+src/data/preprocess.py
+src/features/__init__.py
+src/features/augment.py
+src/features/melspectrogram.py
+src/models/__init__.py
+src/models/cnn_baseline.py
+src/tfg_genre.egg-info/PKG-INFO
+src/tfg_genre.egg-info/SOURCES.txt
+src/tfg_genre.egg-info/dependency_links.txt
+src/tfg_genre.egg-info/top_level.txt

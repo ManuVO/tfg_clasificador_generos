@@ -1,0 +1,12 @@
+dataset: gtzan
+sr: 22050
+slice_sec: 3
+batch_size: 64
+epochs: 40
+lr: 1e-3
+optimizer: adam
+augment: true
+n_mels: 128
+n_fft: 2048
+hop_length: 512
+model: cnn_baseline
