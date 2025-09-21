@@ -23,3 +23,8 @@ gtzan/
 # Salidas de build
 build/
 dist/
+
+# Experimentos (artefactos)
+experiments/
+!experiments/.gitkeep
+reports/figures/

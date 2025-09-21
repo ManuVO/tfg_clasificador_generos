@@ -101,4 +101,4 @@ if ($importErrors.Count -gt 0) {
 
 Write-Host ""
 Write-Host "[DONE] Environment ready. You are now inside '.venv'." -ForegroundColor Green
-Write-Host "        Close this terminal or run 'deactivate' to exit the virtual environment." -ForegroundColor Green
+Write-Host "       Close this terminal or run 'deactivate' to exit the virtual environment." -ForegroundColor Green

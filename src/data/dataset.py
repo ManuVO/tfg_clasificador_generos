@@ -24,7 +24,7 @@ class GenreDataset(Dataset):
 
     def __getitem__(self, idx):
         path = self.items[idx]["filepath"]
-        y, sr = sf.read(path)
+        y, sr = sf.read(path, dtype='float32')
         if self.augment:
             y = train_aug(samples=y, sample_rate=sr)
         # Usar hop_length desde la configuración en el mel_spec
@@ -33,6 +33,9 @@ class GenreDataset(Dataset):
         x = torch.tensor(S).unsqueeze(0)
         ylab = torch.tensor(self.items[idx]["label_idx"])
         return x, ylab
+
+    def __len__(self):
+        return len(self.items)
 
 
 # import torch
@@ -51,7 +54,7 @@ class GenreDataset(Dataset):
 
 #     def __getitem__(self, idx):
 #         path = self.items[idx]["filepath"]
-#         y, sr = sf.read(path)
+#         y, sr = sf.read(path, dtype='float32')
 #         if self.augment:
 #             y = train_aug(samples=y, sample_rate=sr)
 #         S = mel_spec(y, sr)

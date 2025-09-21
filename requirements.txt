@@ -11,3 +11,4 @@ omegaconf
 pandas
 audiomentations
 pydub
+pyyaml
