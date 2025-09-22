@@ -18,6 +18,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import yaml
+from tqdm.auto import tqdm
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
@@ -200,12 +201,16 @@ def main(config_path: str = "configs/gtzan_cnn.yaml") -> None:
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
+    training_cfg = config.get("training", {})
+
     csv_path = config["dataset"]["csv_path"]
-    epochs = int(config["training"]["epochs"])
-    batch_size = int(config["training"]["batch_size"])
-    lr = float(config["training"]["learning_rate"])
+    epochs = int(training_cfg.get("epochs", 1))
+    batch_size = int(training_cfg.get("batch_size", 1))
+    lr = float(training_cfg.get("learning_rate", 1e-3))
     num_classes = int(config["model"]["num_classes"])
     device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    progress_bar_enabled = bool(training_cfg.get("progress_bar", False))
 
     items = load_items_from_csv(csv_path)
     train_items = [row for row in items if row["split"] == "train"]
@@ -217,17 +222,19 @@ def main(config_path: str = "configs/gtzan_cnn.yaml") -> None:
     train_ds = GenreDataset(items, "train", config=config, augment=True)
     val_ds = GenreDataset(items, "val", config=config, augment=False)
 
+    num_workers = int(training_cfg.get("num_workers", 0))
+
     train_dl = DataLoader(
         train_ds,
         batch_size=batch_size,
         shuffle=True,
-        num_workers=int(config["training"].get("num_workers", 0)),
+        num_workers=num_workers,
     )
     val_dl = DataLoader(
         val_ds,
         batch_size=batch_size,
         shuffle=False,
-        num_workers=int(config["training"].get("num_workers", 0)),
+        num_workers=num_workers,
     )
 
     model_name = config.get("model", {}).get("name", "cnn_baseline")
@@ -238,7 +245,7 @@ def main(config_path: str = "configs/gtzan_cnn.yaml") -> None:
     opt = optim.Adam(model.parameters(), lr=lr)
     crit = nn.CrossEntropyLoss()
 
-    scheduler_cfg = config["training"].get("lr_scheduler", {})
+    scheduler_cfg = training_cfg.get("lr_scheduler", {})
     scheduler_kwargs = {
         "mode": "min",
         "factor": float(scheduler_cfg.get("factor", 0.5)),
@@ -261,7 +268,7 @@ def main(config_path: str = "configs/gtzan_cnn.yaml") -> None:
 
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(opt, **scheduler_kwargs)
 
-    early_cfg = config["training"].get("early_stopping", {})
+    early_cfg = training_cfg.get("early_stopping", {})
     early_stopper = EarlyStopping(
         patience=int(early_cfg.get("patience", 8)),
         min_delta=float(early_cfg.get("min_delta", 0.0)),
@@ -308,7 +315,16 @@ def main(config_path: str = "configs/gtzan_cnn.yaml") -> None:
         total_correct = 0
         total_samples = 0
 
-        for xb, yb in train_dl:
+        train_iterator: Iterable = train_dl
+        if progress_bar_enabled:
+            train_iterator = tqdm(
+                train_dl,
+                desc=f"Época {epoch}/{epochs}",
+                unit="batch",
+                leave=False,
+            )
+
+        for xb, yb in train_iterator:
             xb, yb = xb.to(device), yb.to(device)
             opt.zero_grad()
             logits = model(xb)
@@ -320,6 +336,15 @@ def main(config_path: str = "configs/gtzan_cnn.yaml") -> None:
             total_loss += loss.item() * batch
             total_correct += (logits.argmax(1) == yb).sum().item()
             total_samples += batch
+
+            if progress_bar_enabled:
+                train_iterator.set_postfix(
+                    loss=f"{loss.item():.4f}",
+                    lr=f"{opt.param_groups[0]['lr']:.2e}",
+                )
+
+        if progress_bar_enabled:
+            train_iterator.close()
 
         train_loss = total_loss / max(total_samples, 1)
         train_acc = total_correct / max(total_samples, 1)
@@ -429,7 +454,7 @@ def main(config_path: str = "configs/gtzan_cnn.yaml") -> None:
             test_ds,
             batch_size=batch_size,
             shuffle=False,
-            num_workers=int(config["training"].get("num_workers", 0)),
+            num_workers=num_workers,
         )
 
         model.load_state_dict(torch.load(best_checkpoint["path"], map_location=device))
