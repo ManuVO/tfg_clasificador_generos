@@ -2,14 +2,15 @@ import os, sys, math
 from pathlib import Path
 import numpy as np
 
-from models.cnn_baseline import CNNBaseline
-from features.melspectrogram import mel_spec
-from data.dataset import GenreDataset
-
 # Asegurar que podemos importar src.*
 ROOT = Path(__file__).resolve().parent
 SRC = ROOT / "src"
-sys.path.append(str(SRC))
+if str(SRC) not in sys.path:
+    sys.path.append(str(SRC))
+
+from models.cnn_baseline import CNNBaseline
+from features.melspectrogram import mel_spec
+from data.dataset import GenreDataset
 
 # ------------- PRUEBA 0: imports de librerías base -------------
 print("-> Comprobando imports...")
@@ -58,8 +59,23 @@ for i, (label, freq) in enumerate(zip(classes, [220, 440])):  # A3 vs A4
         )
 
 # Construimos datasets y comprobamos un batch
-train_ds = GenreDataset(items, "train", sr=sr, slice_sec=1, augment=False)
-val_ds = GenreDataset(items, "val", sr=sr, slice_sec=1, augment=False)
+dummy_config = {
+    "audio": {
+        "sample_rate": sr,
+        "slice_duration": 1.0,
+        "n_fft": 2048,
+        "hop_length": 512,
+        "n_mels": 128,
+    },
+    "dataset": {"norm_stats_path": None},
+    "augmentation": {
+        "waveform": {},
+        "spec_augment": {"p": 0.0},
+    },
+}
+
+train_ds = GenreDataset(items, "train", config=dummy_config, augment=False)
+val_ds = GenreDataset(items, "val", config=dummy_config, augment=False)
 
 print(f"Train items: {len(train_ds)} | Val items: {len(val_ds)}")
 x0, y0 = train_ds[0]

@@ -1,41 +1,49 @@
-# dataset: gtzan
-# sr: 22050
-# slice_sec: 3
-# batch_size: 64
-# epochs: 40
-# lr: 1e-3
-# optimizer: adam
-# augment: true
-# n_mels: 128
-# n_fft: 2048
-# hop_length: 512
-# model: cnn_baseline
+experiment:
+  name: gtzan_cnn
 
 audio:
+  sample_rate: 22050
+  slice_duration: 3.0  # segundos
   hop_length: 512
-
-augmentation:
-  AddGaussianNoise:
-    min_amplitude: 0.001
-    max_amplitude: 0.01
-    p: 0.3
-  TimeStretch:
-    min_rate: 0.9
-    max_rate: 1.1
-    p: 0.3
-  PitchShift:
-    min_semitones: -2
-    max_semitones: 2
-    p: 0.3
-  Shift:
-    min_shift: -0.2
-    max_shift: 0.2
-    p: 0.2
+  n_fft: 2048
+  n_mels: 128
 
 dataset:
-  csv_path: "data/processed/gtzan/metadata.csv"
+  csv_path: data/processed/gtzan/metadata.csv
+  norm_stats_path: data/processed/gtzan/norm_stats.json
+  recompute_norm_stats: false
+
+augmentation:
+  waveform:
+    AddGaussianNoise:
+      min_amplitude: 0.001
+      max_amplitude: 0.01
+      p: 0.3
+    TimeStretch:
+      min_rate: 0.9
+      max_rate: 1.1
+      p: 0.3
+    PitchShift:
+      min_semitones: -3
+      max_semitones: 3
+      p: 0.3
+    Shift:
+      min_shift: -0.2
+      max_shift: 0.2
+      p: 0.2
+    Gain:
+      min_gain_db: -6.0
+      max_gain_db: 6.0
+      p: 0.5
+  spec_augment:
+    p: 0.5
+    frequency_masks: 2
+    frequency_max_width: 18
+    time_masks: 2
+    time_max_width: 24
 
 model:
+  name: cnn_baseline
   num_classes: 10
 
 training:
@@ -44,3 +52,15 @@ training:
   learning_rate: 0.001
   num_workers: 2
   seed: 42
+  early_stopping:
+    patience: 8
+    min_delta: 0.0
+  lr_scheduler:
+    factor: 0.5
+    patience: 4
+    threshold: 0.001
+    min_lr: 0.000001
+
+reports:
+  baseline_metrics_path: null
+  comparison_table_path: reports/sprint_progress.csv
