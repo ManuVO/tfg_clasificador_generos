@@ -239,15 +239,27 @@ def main(config_path: str = "configs/gtzan_cnn.yaml") -> None:
     crit = nn.CrossEntropyLoss()
 
     scheduler_cfg = config["training"].get("lr_scheduler", {})
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-        opt,
-        mode="min",
-        factor=float(scheduler_cfg.get("factor", 0.5)),
-        patience=int(scheduler_cfg.get("patience", 4)),
-        threshold=float(scheduler_cfg.get("threshold", 0.001)),
-        min_lr=float(scheduler_cfg.get("min_lr", 1e-6)),
-        verbose=False,
-    )
+    scheduler_kwargs = {
+        "mode": "min",
+        "factor": float(scheduler_cfg.get("factor", 0.5)),
+        "patience": int(scheduler_cfg.get("patience", 4)),
+        "threshold": float(scheduler_cfg.get("threshold", 0.001)),
+        "min_lr": float(scheduler_cfg.get("min_lr", 1e-6)),
+    }
+
+    # torch < 1.1.0 no acepta el argumento ``verbose``; añadimos la clave
+    # solo cuando el constructor la expone para mantener compatibilidad.
+    try:
+        import inspect
+
+        signature = inspect.signature(optim.lr_scheduler.ReduceLROnPlateau.__init__)
+        if "verbose" in signature.parameters:
+            scheduler_kwargs["verbose"] = bool(scheduler_cfg.get("verbose", False))
+    except (ValueError, TypeError):
+        # Fallback silencioso si la introspección falla (p. ej., compilado en C++).
+        pass
+
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(opt, **scheduler_kwargs)
 
     early_cfg = config["training"].get("early_stopping", {})
     early_stopper = EarlyStopping(
