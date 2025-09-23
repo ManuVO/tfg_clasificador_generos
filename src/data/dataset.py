@@ -1,67 +1,102 @@
-# src/data/dataset.py (después de los cambios)
-import yaml
-import soundfile as sf
-import librosa
+"""PyTorch Dataset implementation for the GTZAN segments."""
+
+from __future__ import annotations
+
+import json
+import warnings
+from pathlib import Path
+from typing import Dict, Iterable, List, Optional
+
 import numpy as np
+import soundfile as sf
 import torch
 from torch.utils.data import Dataset
-from pathlib import Path
 
 from features.melspectrogram import mel_spec
-from features.augment import train_aug
+from features.augment import build_waveform_augment, apply_spec_augment
 
-# Cargar configuración YAML
-with open("config.yaml", "r") as f:
-    config = yaml.safe_load(f)
-HOP_LENGTH = config["audio"]["hop_length"]
 
 class GenreDataset(Dataset):
-    def __init__(self, items, split, sr=22050, slice_sec=3, augment=False):
-        self.items = [row for row in items if row["split"] == split]
-        self.sr = sr
-        self.slice_sec = slice_sec
+    """Dataset of GTZAN segments returning log-mel spectrogram tensors."""
+
+    def __init__(
+        self,
+        items: Iterable[Dict],
+        split: str,
+        config: Optional[Dict],
+        augment: bool = False,
+    ) -> None:
+        self.items: List[Dict] = [row for row in items if row["split"] == split]
+        self.split = split
+        self.config = config or {}
         self.augment = augment
 
-    def __getitem__(self, idx):
-        path = self.items[idx]["filepath"]
-        y, sr = sf.read(path, dtype='float32')
-        if self.augment:
-            y = train_aug(samples=y, sample_rate=sr)
-        # Usar hop_length desde la configuración en el mel_spec
-        S = mel_spec(y, sr, hop_length=HOP_LENGTH)
-        S = (S - S.mean()) / (S.std() + 1e-6)
-        x = torch.tensor(S).unsqueeze(0)
-        ylab = torch.tensor(self.items[idx]["label_idx"])
-        return x, ylab
+        audio_cfg = self.config.get("audio", {})
+        self.sample_rate = int(audio_cfg.get("sample_rate", 22050))
+        self.slice_duration = float(audio_cfg.get("slice_duration", 3.0))
+        self.n_fft = int(audio_cfg.get("n_fft", 2048))
+        self.hop_length = int(audio_cfg.get("hop_length", 512))
+        self.n_mels = int(audio_cfg.get("n_mels", 128))
 
-    def __len__(self):
+        self.waveform_aug = build_waveform_augment(self.config) if augment else None
+        self.norm_stats = self._load_norm_stats()
+
+    def _load_norm_stats(self) -> Optional[Dict[str, float]]:
+        dataset_cfg = self.config.get("dataset", {})
+        path = dataset_cfg.get("norm_stats_path")
+        if not path:
+            return None
+
+        norm_path = Path(path)
+        if not norm_path.is_absolute():
+            norm_path = Path.cwd() / norm_path
+
+        if not norm_path.exists():
+            warnings.warn(
+                f"Normalization stats file not found at {norm_path}. Falling back to per-segment standardization.",
+                RuntimeWarning,
+            )
+            return None
+
+        with open(norm_path, "r", encoding="utf-8") as f:
+            stats = json.load(f)
+
+        mean = float(stats.get("mean", 0.0))
+        std = float(stats.get("std", 1.0))
+        if std <= 0.0:
+            std = 1.0
+
+        return {"mean": mean, "std": std}
+
+    def __len__(self) -> int:  # pragma: no cover - trivial
         return len(self.items)
 
+    def __getitem__(self, idx: int):
+        item = self.items[idx]
+        path = item["filepath"]
 
-# import torch
-# from torch.utils.data import Dataset
-# import soundfile as sf
-# import numpy as np
-# import librosa
+        waveform, sr = sf.read(path, dtype="float32")
 
-# from features.melspectrogram import mel_spec
-# from features.augment import train_aug
+        if self.waveform_aug is not None:
+            waveform = self.waveform_aug(samples=waveform, sample_rate=sr)
 
-# class GenreDataset(Dataset):
-#     def __init__(self, items, split, sr=22050, slice_sec=3, augment=False):
-#         self.items = [row for row in items if row["split"]==split]
-#         self.sr = sr; self.slice_sec = slice_sec; self.augment = augment
+        spec = mel_spec(
+            waveform,
+            sr,
+            n_fft=self.n_fft,
+            hop_length=self.hop_length,
+            n_mels=self.n_mels,
+        )
 
-#     def __getitem__(self, idx):
-#         path = self.items[idx]["filepath"]
-#         y, sr = sf.read(path, dtype='float32')
-#         if self.augment:
-#             y = train_aug(samples=y, sample_rate=sr)
-#         S = mel_spec(y, sr)
-#         S = (S - S.mean()) / (S.std() + 1e-6)
-#         x = torch.tensor(S).unsqueeze(0)
-#         ylab = torch.tensor(self.items[idx]["label_idx"])
-#         return x, ylab
+        if self.augment:
+            spec = apply_spec_augment(spec, self.config)
 
-#     def __len__(self):
-#         return len(self.items)
+        if self.norm_stats:
+            spec = (spec - self.norm_stats["mean"]) / (self.norm_stats["std"] + 1e-8)
+        else:
+            spec = (spec - np.mean(spec)) / (np.std(spec) + 1e-6)
+
+        spec_tensor = torch.tensor(spec, dtype=torch.float32).unsqueeze(0)
+        label_idx = torch.tensor(int(item["label_idx"]), dtype=torch.long)
+
+        return spec_tensor, label_idx

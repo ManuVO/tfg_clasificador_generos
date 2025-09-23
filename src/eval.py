@@ -76,7 +76,7 @@ def main():
         print("No hay split 'test' en el CSV. Abortando.")
         return
 
-    test_ds = GenreDataset(test_items, "test", augment=False)
+    test_ds = GenreDataset(items, "test", config=config, augment=False)
     test_dl = DataLoader(
         test_ds, batch_size=batch_size, shuffle=False, num_workers=num_workers
     )
