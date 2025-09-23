@@ -1,5 +1,5 @@
 experiment:
-  name: gtzan_cnn
+  name: template
 
 audio:
   sample_rate: 22050
