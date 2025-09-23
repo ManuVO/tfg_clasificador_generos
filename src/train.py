@@ -254,18 +254,6 @@ def main(config_path: str = "configs/gtzan_cnn.yaml") -> None:
         "min_lr": float(scheduler_cfg.get("min_lr", 1e-6)),
     }
 
-    # torch < 1.1.0 no acepta el argumento ``verbose``; añadimos la clave
-    # solo cuando el constructor la expone para mantener compatibilidad.
-    try:
-        import inspect
-
-        signature = inspect.signature(optim.lr_scheduler.ReduceLROnPlateau.__init__)
-        if "verbose" in signature.parameters:
-            scheduler_kwargs["verbose"] = bool(scheduler_cfg.get("verbose", False))
-    except (ValueError, TypeError):
-        # Fallback silencioso si la introspección falla (p. ej., compilado en C++).
-        pass
-
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(opt, **scheduler_kwargs)
 
     early_cfg = training_cfg.get("early_stopping", {})
@@ -366,7 +354,10 @@ def main(config_path: str = "configs/gtzan_cnn.yaml") -> None:
         val_loss = val_loss_sum / max(len(val_gts), 1)
         val_acc = accuracy_score(val_gts, val_preds) if val_gts else 0.0
         val_f1 = f1_score(val_gts, val_preds, average="macro") if val_gts else 0.0
-        current_lr = opt.param_groups[0]["lr"]
+
+        scheduler.step(val_loss)
+        last_lrs = scheduler.get_last_lr()
+        current_lr = float(last_lrs[0]) if last_lrs else opt.param_groups[0]["lr"]
 
         writer.add_scalar("train/loss", train_loss, epoch)
         writer.add_scalar("train/accuracy", train_acc, epoch)
@@ -418,8 +409,6 @@ def main(config_path: str = "configs/gtzan_cnn.yaml") -> None:
             )
             torch.save(model.state_dict(), best_checkpoint["path"])
 
-        scheduler.step(val_loss)
-
         if early_stopper.step(val_loss):
             early_stop_triggered = True
             print(f"⏹️  Deteniendo entrenamiento por early stopping en la época {epoch}.")
@@ -457,7 +446,14 @@ def main(config_path: str = "configs/gtzan_cnn.yaml") -> None:
             num_workers=num_workers,
         )
 
-        model.load_state_dict(torch.load(best_checkpoint["path"], map_location=device))
+        load_kwargs = {"map_location": device}
+        try:
+            state_dict = torch.load(
+                best_checkpoint["path"], weights_only=True, **load_kwargs
+            )
+        except TypeError:
+            state_dict = torch.load(best_checkpoint["path"], **load_kwargs)
+        model.load_state_dict(state_dict)
         model.eval()
 
         test_preds: List[int] = []

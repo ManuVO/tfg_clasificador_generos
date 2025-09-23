@@ -90,7 +90,12 @@ def main():
     if not ckpt_path.exists():
         raise FileNotFoundError(f"No se encontró checkpoint: {ckpt_path}")
 
-    model.load_state_dict(torch.load(ckpt_path, map_location=device))
+    load_kwargs = {"map_location": device}
+    try:
+        state_dict = torch.load(ckpt_path, weights_only=True, **load_kwargs)
+    except TypeError:
+        state_dict = torch.load(ckpt_path, **load_kwargs)
+    model.load_state_dict(state_dict)
     model.eval()
 
     preds, gts = [], []
