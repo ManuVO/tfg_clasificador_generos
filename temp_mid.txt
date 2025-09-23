@@ -1,0 +1,151 @@
+   - Seccion `dataset`: rutas al nuevo CSV y estadisticas.
+   - Seccion `audio`: parametros de espectrograma (`sample_rate`, `n_fft`, etc.).
+   - Seccion `augmentation`: probabilidades e intensidades de transformaciones.
+   - Seccion `model`: `num_classes` debe coincidir con el numero de generos.
+   - Seccion `training`: hiperparametros, early stopping y scheduler.
+3. Ejecute el entrenamiento con el archivo personalizado:
+   ```powershell
+   python src\train.py --config configs\mi_experimento.yaml
+   ```
+4. Si desea registrar datasets adicionales, agreguelos en `config.yaml` dentro de `datasets:` siguiendo el esquema de `gtzan` (propiedades `display_name` y `stages`).
+5. Para inferencia, ajuste `configs/base/inference.yaml` o `configs/datasets/<dataset>/inference.yaml` indicando `checkpoint_path` y `class_mapping_path`.
+
+## Comprobar el pipeline del clasificador
+1. Con el entorno activo, ejecute la prueba sintentica:
+   ```powershell
+   python scripts\test_pipeline.py
+   ```
+2. El script genera un tono de prueba, aplica augmentaciones, calcula mel-espectrogramas y valida que las dimensiones coincidan con la configuracion resuelta.
+3. Revise los logs en la terminal y la imagen `reports/tmp_pipeline/spec_example.png` para confirmar que la transformacion de audio a espectrograma funciona como se espera.
+
+## Notas adicionales
+- Los checkpoints y metricas se guardan siempre dentro de `experiments/`. El mejor checkpoint segun `val_loss` se almacena como `checkpoints\best_model.pt`.
+- Ajuste `training.num_workers` si el hardware limita el numero de hilos de carga.
+- Ante cambios de rutas o nuevos datasets, vuelva a ejecutar `src\data\preprocess.py` para recalcular `metadata.csv` y las estadisticas de normalizacion. -->
+
+root@17cf3f2c7d0d:/workspace/tfg_clasificador_generos# nl -ba README.md | sed -n '1,220p'
+     1  # 🎶 Clasificador de géneros musicales
+     2
+     3  ¡Bienvenido! Este repositorio recopila el Trabajo Fin de Grado dedicado a la **clasificación automática de géneros music
+ales** a partir de audio. Aquí encontrarás todo lo necesario para preparar el dataset GTZAN, generar espectrogramas log-mel, ent
+renar redes neuronales y sentar las bases de una aplicación que identifique el género musical de cualquier archivo que le propor
+ciones.
+     4
+     5  ## 🎯 Objetivo del proyecto
+     6
+     7  - 🧪 **Meta a corto plazo (MVP)**: ofrecer una experiencia desde la terminal donde el usuario ejecute un comando, aporte
+ un archivo de audio y reciba el género estimado por el modelo entrenado.
+     8  - 🧱 **Estado actual**: el repositorio incluye scripts para preprocesar datos, entrenar y evaluar modelos, además de uti
+lidades para experimentar con distintas arquitecturas.
+     9  - 🌠 **Visión a largo plazo**: evolucionar hacia una interfaz visual (escritorio y/o móvil) que permita cargar o grabar
+audio y obtener el género musical de forma inmediata, convirtiendo el clasificador en una aplicación accesible para cualquier pe
+rsona.
+    10
+    11  > 🚧 Este es un proyecto en construcción. Cada sección del README indica cómo puedes contribuir y qué pasos seguir para
+alcanzar la experiencia completa descrita arriba.
+    12
+    13  ## ✨ ¿Qué encontrarás aquí?
+    14
+    15  - 🎚️ **Preprocesamiento de audio**: normalización, resampleo y división de pistas en fragmentos manejables.
+    16  - 🔍 **Extracción de características**: cálculo de espectrogramas log-mel y estadísticas reutilizables.
+    17  - 🧠 **Modelos base**: CNN ligera (`CNNBaseline`) como punto de partida.
+    18  - ♻️ **Entrenamiento reproducible**: control de semillas, registros en TensorBoard y checkpoints.
+    19  - 📊 **Evaluación automática**: reportes de métricas, matriz de confusión y análisis por género.
+    20
+    21  ## 🧩 Requisitos previos
+    22
+    23  - Python 3.10 o superior con `pip` y `venv` disponibles.
+    24  - Dependencias de audio externas:
+    25    - [FFmpeg](https://ffmpeg.org/) para que `pydub` procese formatos variados.
+    26    - Bibliotecas de sistema como `libsndfile` o `portaudio`, según tu plataforma.
+    27  - GPU con CUDA opcional pero recomendable para acelerar el entrenamiento (el código detecta CPU/GPU de forma automática)
+.
+    28
+    29  ## 🚀 Configuración inicial
+    30
+    31  1. Clona el repositorio y sitúate en la carpeta del proyecto:
+    32     ```bash
+    33     git clone <url-del-repositorio>
+    34     cd tfg_clasificador_generos
+    35     ```
+    36  2. **(Recomendado en Windows/PowerShell)** ejecuta el asistente automático:
+    37     ```powershell
+    38     ./init_env.ps1
+    39     ```
+    40     > ℹ️ Este script comprueba la instalación de Python, crea (o reutiliza) el entorno virtual `.venv`, activa la sesión,
+actualiza `pip`, instala las dependencias de `requirements.txt`, configura `PYTHONPATH` y valida la importación de módulos inter
+nos. Al terminar, tendrás todo listo para empezar a ejecutar los scripts del proyecto desde esa misma consola.
+    41  3. **Si usas macOS o Linux**, realiza la preparación manual:
+    42     ```bash
+    43     python -m venv .venv
+    44     source .venv/bin/activate
+    45     pip install --upgrade pip
+    46     pip install -r requirements.txt
+    47     ```
+    48     > 💡 En cualquier sistema puedes instalar el paquete en modo editable para facilitar los imports: `pip install -e .`.
+    49
+    50  ## 🎼 Preparar el dataset GTZAN
+    51
+    52  1. Descarga el dataset [GTZAN Genre Collection](http://marsyas.info/downloads/datasets.html) o una réplica fiable.
+    53  2. Descomprime los audios de modo que queden en `data/raw/gtzan/genres_original/GENRE/*.wav` (una carpeta por género).
+    54  3. Genera los segmentos, metadatos y estadísticas de normalización:
+    55     ```bash
+    56     python src/data/preprocess.py --dataset gtzan --project-config config.yaml
+    57     ```
+    58     > 🗂️ Los resultados aparecerán en `data/processed/gtzan/` y se reutilizan durante el entrenamiento.
+    59
+    60  ## 🏋️‍♀️ Entrenar un modelo
+    61
+    62  1. Revisa la configuración en `configs/datasets/gtzan/training.yaml` (épocas, batch size, scheduler, augmentations…).
+    63  2. Lanza el entrenamiento:
+    64     ```bash
+    65     python src/train.py --dataset gtzan --project-config config.yaml
+    66     ```
+    67  3. Encontrarás los artefactos en `experiments/<nombre_experimento>/run_<timestamp>/`:
+    68     - `checkpoints/best_model.pt`
+    69     - `logs/` para TensorBoard (`tensorboard --logdir experiments`)
+    70     - `metrics.csv` y la configuración resuelta (`config.yaml`)
+    71
+    72  ## ✅ Evaluar un checkpoint
+    73
+    74  ```bash
+    75  python src/eval.py --dataset gtzan --project-config config.yaml \
+    76      --run_dir experiments/<nombre_experimento>/run_<timestamp>/
+    77  ```
+    78
+    79  El comando genera `classification_report.txt` y `confusion_matrix.png` en el directorio de la ejecución (o en el indicad
+o con la opción `--out_dir`).
+    80
+    81  ## 🧭 Mapa del repositorio
+    82
+    83  ```text
+    84  📁 tfg_clasificador_generos
+    85  ├── 📂 configs/             → Plantillas de configuración para datasets y stages
+    86  ├── 📂 data/                → Datos brutos (`raw`) y procesados (`processed`) — se añaden manualmente
+    87  ├── 📂 reports/             → Informes, gráficos y resultados exportados
+    88  ├── 📂 scripts/             → Utilidades y experimentos rápidos (ej. notebooks, smoke tests)
+    89  ├── 📂 src/
+    90  │   ├── 📂 data/            → Preprocesado y definición de datasets
+    91  │   ├── 📂 features/        → Extracción de características y augmentations
+    92  │   ├── 📂 models/          → Arquitecturas de redes neuronales
+    93  │   ├── 🧾 train.py         → Punto de entrada para entrenar
+    94  │   └── 🧾 eval.py          → Evaluación de checkpoints entrenados
+    95  ├── 🧾 config.yaml          → Configuración maestra del proyecto
+    96  ├── 🧾 requirements.txt     → Dependencias de Python
+    97  ├── 🧾 init_env.ps1         → Asistente para preparar el entorno en PowerShell
+    98  └── 🧾 README.md            → Esta guía
+    99  ```
+   100
+   101  ## 🛤️ Hoja de ruta hacia la experiencia completa
+   102
+   103  1. 🖥️ **CLI de inferencia**: exponer un comando `python src/predict.py --audio <ruta>` que utilice el mejor checkpoint di
+sponible y devuelva el género estimado.
+   104  2. 🧪 **Validación con audios reales**: recopilar ejemplos propios, ejecutar el pipeline de inferencia y documentar acie
+rtos/errores en `reports/`.
+   105  3. 🤝 **Feedback de usuarios**: diseñar pruebas con amigos o compañeros para mejorar usabilidad y mensajes de la herrami
+enta en terminal.
+   106  4. 📱 **Visión futura (UI)**: prototipar una interfaz gráfica (desktop/móvil) que permita seleccionar o grabar un audio
+y ver el género resultante al instante.
+   107
+   108  Con esta guía visual tendrás claro el propósito del proyecto, sabrás en qué punto nos encontramos y podrás contribuir a
+que el clasificador evolucione desde la terminal hasta convertirse en una aplicación accesible para todos.
