@@ -1,0 +1,11 @@
+model:
+  checkpoint_path: null  # Rellena con el checkpoint resultante del entrenamiento
+  class_mapping_path: null  # Ruta a un JSON con la correspondencia índice->género
+
+pipeline:
+  sample_rate: 22050
+  segment_duration: 3.0
+  step_duration: 1.5
+
+output:
+  directory: predictions/gtzan

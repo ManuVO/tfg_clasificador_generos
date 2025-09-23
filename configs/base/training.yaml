@@ -1,16 +1,16 @@
 experiment:
-  name: gtzan_cnn
+  name: default_experiment
 
 audio:
   sample_rate: 22050
-  slice_duration: 3.0  # segundos
+  slice_duration: 3.0
   hop_length: 512
   n_fft: 2048
   n_mels: 128
 
 dataset:
-  csv_path: data/processed/gtzan/metadata.csv
-  norm_stats_path: data/processed/gtzan/norm_stats.json
+  csv_path: null
+  norm_stats_path: null
   recompute_norm_stats: false
 
 augmentation:
@@ -52,7 +52,7 @@ training:
   learning_rate: 0.001
   num_workers: 2
   seed: 42
-  progress_bar: true
+  progress_bar: false
   early_stopping:
     patience: 8
     min_delta: 0.0

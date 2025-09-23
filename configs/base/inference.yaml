@@ -1,0 +1,17 @@
+pipeline:
+  sample_rate: 22050
+  segment_duration: 3.0
+  step_duration: 1.5
+  center_audio: true
+  normalize_audio: true
+
+model:
+  name: cnn_baseline
+  checkpoint_path: null
+  class_mapping_path: null
+  device: auto
+
+output:
+  top_k: 3
+  save_logits: false
+  directory: predictions

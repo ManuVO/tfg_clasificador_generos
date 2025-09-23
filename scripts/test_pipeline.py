@@ -1,19 +1,22 @@
 # scripts/test_pipeline.py
 
-import os
+from pathlib import Path
+
 import numpy as np
-import yaml
-import soundfile as sf
 import librosa
 import librosa.display
 import matplotlib.pyplot as plt
 
 from features.augment import build_waveform_augment, apply_spec_augment
 from features.melspectrogram import mel_spec
+from configuration import load_stage_config
 
-config_path = os.path.join("configs", "gtzan_cnn.yaml")
-with open(config_path, "r") as f:
-    config = yaml.safe_load(f)
+config, config_meta = load_stage_config("training")
+dataset_name = config_meta.get("dataset", "desconocido")
+print(f"⚙️  Configuración de prueba cargada para dataset={dataset_name}.")
+
+TMP = Path("reports") / "tmp_pipeline"
+TMP.mkdir(parents=True, exist_ok=True)
 
 audio_cfg = config.get("audio", {})
 sr = audio_cfg.get("sample_rate", 22050)

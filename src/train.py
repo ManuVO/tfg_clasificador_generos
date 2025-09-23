@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 import random
-import shutil
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -23,6 +23,7 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
+from configuration import load_stage_config
 from data.dataset import GenreDataset
 from features.melspectrogram import mel_spec
 from models.cnn_baseline import CNNBaseline
@@ -189,9 +190,30 @@ def update_comparison_table(
             writer.writerow(row)
 
 
-def main(config_path: str = "configs/gtzan_cnn.yaml") -> None:
-    with open(config_path, "r", encoding="utf-8") as f:
-        config = yaml.safe_load(f)
+def main(
+    config_path: Optional[str] = None,
+    *,
+    dataset: Optional[str] = None,
+    project_config: str = "config.yaml",
+) -> None:
+    stage = "training"
+    config, config_meta = load_stage_config(
+        stage,
+        config_path=config_path,
+        dataset=dataset,
+        project_config_path=project_config,
+    )
+
+    sources_info = ", ".join(config_meta.get("sources", []))
+    if config_meta.get("resolved_with") == "explicit_config":
+        print(f"⚙️  Configuración cargada manualmente: {sources_info or config_path}")
+    else:
+        dataset_name = config_meta.get("dataset") or "desconocido"
+        print(
+            f"⚙️  Configuración resuelta automáticamente (stage={stage}, dataset={dataset_name})."
+        )
+        if sources_info:
+            print(f"    Fuentes combinadas: {sources_info}")
 
     seed = config.get("training", {}).get("seed", 42)
     random.seed(seed)
@@ -254,18 +276,6 @@ def main(config_path: str = "configs/gtzan_cnn.yaml") -> None:
         "min_lr": float(scheduler_cfg.get("min_lr", 1e-6)),
     }
 
-    # torch < 1.1.0 no acepta el argumento ``verbose``; añadimos la clave
-    # solo cuando el constructor la expone para mantener compatibilidad.
-    try:
-        import inspect
-
-        signature = inspect.signature(optim.lr_scheduler.ReduceLROnPlateau.__init__)
-        if "verbose" in signature.parameters:
-            scheduler_kwargs["verbose"] = bool(scheduler_cfg.get("verbose", False))
-    except (ValueError, TypeError):
-        # Fallback silencioso si la introspección falla (p. ej., compilado en C++).
-        pass
-
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(opt, **scheduler_kwargs)
 
     early_cfg = training_cfg.get("early_stopping", {})
@@ -274,7 +284,14 @@ def main(config_path: str = "configs/gtzan_cnn.yaml") -> None:
         min_delta=float(early_cfg.get("min_delta", 0.0)),
     )
 
-    experiment_name = config.get("experiment", {}).get("name", Path(config_path).stem)
+    experiment_name = config.get("experiment", {}).get("name")
+    if not experiment_name:
+        if config_path:
+            experiment_name = Path(config_path).stem
+        elif config_meta.get("dataset"):
+            experiment_name = f"{config_meta['dataset']}_{stage}"
+        else:
+            experiment_name = "experiment"
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     run_dir = Path("experiments") / experiment_name / f"run_{timestamp}"
     logs_dir = run_dir / "logs"
@@ -282,7 +299,9 @@ def main(config_path: str = "configs/gtzan_cnn.yaml") -> None:
     logs_dir.mkdir(parents=True, exist_ok=True)
     ckpt_dir.mkdir(parents=True, exist_ok=True)
 
-    shutil.copy(config_path, run_dir / "config.yaml")
+    resolved_config_path = run_dir / "config.yaml"
+    with open(resolved_config_path, "w", encoding="utf-8") as cfg_out:
+        yaml.safe_dump(config, cfg_out, sort_keys=False, allow_unicode=True)
 
     writer = SummaryWriter(str(logs_dir))
 
@@ -366,7 +385,10 @@ def main(config_path: str = "configs/gtzan_cnn.yaml") -> None:
         val_loss = val_loss_sum / max(len(val_gts), 1)
         val_acc = accuracy_score(val_gts, val_preds) if val_gts else 0.0
         val_f1 = f1_score(val_gts, val_preds, average="macro") if val_gts else 0.0
-        current_lr = opt.param_groups[0]["lr"]
+
+        scheduler.step(val_loss)
+        last_lrs = scheduler.get_last_lr()
+        current_lr = float(last_lrs[0]) if last_lrs else opt.param_groups[0]["lr"]
 
         writer.add_scalar("train/loss", train_loss, epoch)
         writer.add_scalar("train/accuracy", train_acc, epoch)
@@ -418,8 +440,6 @@ def main(config_path: str = "configs/gtzan_cnn.yaml") -> None:
             )
             torch.save(model.state_dict(), best_checkpoint["path"])
 
-        scheduler.step(val_loss)
-
         if early_stopper.step(val_loss):
             early_stop_triggered = True
             print(f"⏹️  Deteniendo entrenamiento por early stopping en la época {epoch}.")
@@ -436,7 +456,8 @@ def main(config_path: str = "configs/gtzan_cnn.yaml") -> None:
     metrics_summary: Dict = {
         "experiment_name": experiment_name,
         "timestamp": timestamp,
-        "config_path": str(Path(config_path).resolve()),
+        "config_path": str(resolved_config_path.resolve()),
+        "config_resolution": config_meta,
         "epochs_requested": epochs,
         "epochs_trained": len(history),
         "early_stopped": early_stop_triggered,
@@ -457,7 +478,14 @@ def main(config_path: str = "configs/gtzan_cnn.yaml") -> None:
             num_workers=num_workers,
         )
 
-        model.load_state_dict(torch.load(best_checkpoint["path"], map_location=device))
+        load_kwargs = {"map_location": device}
+        try:
+            state_dict = torch.load(
+                best_checkpoint["path"], weights_only=True, **load_kwargs
+            )
+        except TypeError:
+            state_dict = torch.load(best_checkpoint["path"], **load_kwargs)
+        model.load_state_dict(state_dict)
         model.eval()
 
         test_preds: List[int] = []
@@ -514,4 +542,30 @@ def main(config_path: str = "configs/gtzan_cnn.yaml") -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(
+        description="Entrena el modelo de clasificación de géneros musicales"
+    )
+    parser.add_argument(
+        "--config",
+        type=str,
+        default=None,
+        help="Ruta a un archivo YAML completo que sustituye la resolución automática.",
+    )
+    parser.add_argument(
+        "--dataset",
+        type=str,
+        default=None,
+        help="Nombre del dataset declarado en config.yaml",
+    )
+    parser.add_argument(
+        "--project-config",
+        type=str,
+        default="config.yaml",
+        help="Ruta al YAML maestro del proyecto",
+    )
+    cli_args = parser.parse_args()
+    main(
+        config_path=cli_args.config,
+        dataset=cli_args.dataset,
+        project_config=cli_args.project_config,
+    )
