@@ -1,8 +1,4 @@
-# 🎵 Clasificador de géneros musicales
-
-![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)  
-![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)  
-![WIP](https://img.shields.io/badge/Status-WIP-orange)  
+# 🎵 Clasificador de géneros musicales (WIP)
 
 Este repositorio forma parte de un **Trabajo Fin de Grado (TFG)** dedicado a la **clasificación automática de géneros musicales** a partir de audio.  
 El proyecto implementa un pipeline completo: desde la **preparación de un dataset**, la **generación de espectrogramas log-mel**, el **entrenamiento de redes neuronales convolucionales (CNNs)** y su **evaluación**, hasta sentar las bases de una futura aplicación capaz de predecir el género musical de cualquier archivo de audio.
