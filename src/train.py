@@ -229,6 +229,7 @@ def main(
     epochs = int(training_cfg.get("epochs", 1))
     batch_size = int(training_cfg.get("batch_size", 1))
     lr = float(training_cfg.get("learning_rate", 1e-3))
+    weight_decay = float(training_cfg.get("weight_decay", 0.0))
     num_classes = int(config["model"]["num_classes"])
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -264,7 +265,7 @@ def main(
         raise NotImplementedError(f"Modelo {model_name} no soportado todavía")
     model = CNNBaseline(n_classes=num_classes).to(device)
 
-    opt = optim.Adam(model.parameters(), lr=lr)
+    opt = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     crit = nn.CrossEntropyLoss()
 
     scheduler_cfg = training_cfg.get("lr_scheduler", {})

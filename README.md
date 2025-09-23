@@ -154,9 +154,10 @@ Verifica con un audio sintético que la transformación a espectrograma funciona
 ---
 
 ## 📝 Notas adicionales
-- Los checkpoints se guardan en `experiments/`; el mejor modelo se guarda como `checkpoints/best_model.pt`.  
-- Ajusta `training.num_workers` si tu hardware limita hilos.  
-- Cambios en rutas/datasets → ejecutar de nuevo el preprocesado.  
+- Los checkpoints se guardan en `experiments/`; el mejor modelo se guarda como `checkpoints/best_model.pt`.
+- Ajusta `training.num_workers` si tu hardware limita hilos.
+- Controla la regularización L2 del optimizador con `training.weight_decay` (por defecto `5e-4`; fija `0.0` para desactivarla).
+- Cambios en rutas/datasets → ejecutar de nuevo el preprocesado.
 
 ---
 
