@@ -7,14 +7,15 @@ import json
 import random
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterable, Iterator, List, Tuple
+from typing import Dict, Iterable, Iterator, List, Optional, Tuple
 
 import librosa
 import numpy as np
 import soundfile as sf
-import yaml
 from pydub import AudioSegment
 from sklearn.model_selection import train_test_split
+
+from configuration import load_stage_config
 
 RNG_SEED = 42
 random.seed(RNG_SEED)
@@ -122,9 +123,36 @@ def mel_spectrogram_db(
     return mel_db.astype(np.float32)
 
 
-def prepare(config_path: Path | str = "configs/gtzan_cnn.yaml") -> None:
-    with open(config_path, "r", encoding="utf-8") as cfg_file:
-        config = yaml.safe_load(cfg_file)
+def prepare(
+    config_path: Path | str | None = None,
+    *,
+    dataset: Optional[str] = None,
+    project_config: str = "config.yaml",
+) -> None:
+    if isinstance(config_path, Path):
+        config_str: Optional[str] = str(config_path)
+    else:
+        config_str = config_path
+
+    config, config_meta = load_stage_config(
+        "training",
+        config_path=config_str,
+        dataset=dataset,
+        project_config_path=project_config,
+    )
+
+    prep_sources = ", ".join(config_meta.get("sources", []))
+    if config_meta.get("resolved_with") == "explicit_config":
+        print(
+            f"⚙️  Configuración de preprocesado cargada manualmente: {prep_sources or config_str}"
+        )
+    else:
+        dataset_name = config_meta.get("dataset") or "desconocido"
+        print(
+            f"⚙️  Configuración de preprocesado resuelta automáticamente (dataset={dataset_name})."
+        )
+        if prep_sources:
+            print(f"    Fuentes combinadas: {prep_sources}")
 
     audio_cfg = config.get("audio", {})
     target_sr = int(audio_cfg.get("sample_rate", 22050))

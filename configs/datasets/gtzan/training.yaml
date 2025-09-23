@@ -1,0 +1,20 @@
+experiment:
+  name: gtzan_cnn
+
+dataset:
+  csv_path: data/processed/gtzan/metadata.csv
+  norm_stats_path: data/processed/gtzan/norm_stats.json
+  recompute_norm_stats: false
+
+audio:
+  sample_rate: 22050
+  slice_duration: 3.0
+  hop_length: 512
+  n_fft: 2048
+  n_mels: 128
+
+model:
+  num_classes: 10
+
+training:
+  progress_bar: true

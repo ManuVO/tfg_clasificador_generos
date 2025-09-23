@@ -1,6 +1,5 @@
 # src/eval.py
 import argparse
-import yaml
 from pathlib import Path
 import torch
 from torch.utils.data import DataLoader
@@ -15,6 +14,7 @@ import matplotlib.pyplot as plt
 from train import load_items_from_csv
 from data.dataset import GenreDataset
 from models.cnn_baseline import CNNBaseline
+from configuration import load_stage_config
 
 
 def plot_confusion_matrix(cm, class_names, out_path):
@@ -39,7 +39,22 @@ def main():
         description="Evaluación independiente de checkpoint"
     )
     parser.add_argument(
-        "--config", type=str, default="configs/gtzan_cnn.yaml", help="Ruta YAML"
+        "--config",
+        type=str,
+        default=None,
+        help="Ruta a un YAML específico (opcional)",
+    )
+    parser.add_argument(
+        "--dataset",
+        type=str,
+        default=None,
+        help="Nombre del dataset definido en config.yaml",
+    )
+    parser.add_argument(
+        "--project-config",
+        type=str,
+        default="config.yaml",
+        help="Ruta al YAML maestro del proyecto",
     )
     parser.add_argument(
         "--run_dir", type=str, required=True, help="Directorio de run con checkpoints/"
@@ -59,9 +74,24 @@ def main():
     out_dir = Path(args.out_dir) if args.out_dir else run_dir
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # Cargar config
-    with open(args.config, "r") as f:
-        config = yaml.safe_load(f)
+    config, config_meta = load_stage_config(
+        "evaluation",
+        config_path=args.config,
+        dataset=args.dataset,
+        project_config_path=args.project_config,
+    )
+    eval_sources = ", ".join(config_meta.get("sources", []))
+    if config_meta.get("resolved_with") == "explicit_config":
+        print(
+            f"⚙️  Configuración de evaluación cargada manualmente: {eval_sources or args.config}"
+        )
+    else:
+        dataset_name = config_meta.get("dataset") or "desconocido"
+        print(
+            f"⚙️  Configuración de evaluación resuelta automáticamente (dataset={dataset_name})."
+        )
+        if eval_sources:
+            print(f"    Fuentes combinadas: {eval_sources}")
     csv_path = config["dataset"]["csv_path"]
     batch_size = config["training"]["batch_size"]
     num_workers = config["training"]["num_workers"]

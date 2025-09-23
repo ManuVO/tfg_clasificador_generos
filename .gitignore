@@ -18,7 +18,8 @@ __pycache__/
 *.log
 
 # Archivos en crudo
-gtzan/
+data/raw/gtzan/
+data/processed/gtzan/
 
 # Salidas de build
 build/
