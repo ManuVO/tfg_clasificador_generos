@@ -18,29 +18,29 @@ augmentation:
     AddGaussianNoise:
       min_amplitude: 0.001
       max_amplitude: 0.01
-      p: 0.5
+      p: 0.6
     TimeStretch:
       min_rate: 0.9
       max_rate: 1.1
-      p: 0.5
+      p: 0.6
     PitchShift:
       min_semitones: -3
       max_semitones: 3
-      p: 0.5
+      p: 0.6
     Shift:
       min_shift: -0.2
       max_shift: 0.2
-      p: 0.3
+      p: 0.4
     Gain:
       min_gain_db: -6.0
       max_gain_db: 6.0
-      p: 0.6
+      p: 0.7
   spec_augment:
-    p: 0.75
-    frequency_masks: 3
-    frequency_max_width: 24
-    time_masks: 4
-    time_max_width: 48
+    p: 0.8
+    frequency_masks: 4
+    frequency_max_width: 32
+    time_masks: 5
+    time_max_width: 64
 
 model:
   name: cnn_baseline
