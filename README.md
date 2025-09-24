@@ -84,10 +84,10 @@ A continuación se ofrece una visión general del **backlog actual**, incluyendo
 <table width="100%" style="border-collapse:collapse;">
   <thead>
     <tr>
-      <th style="text-align:left; padding:10px; border-bottom:2px solid #eaecef; font-size:16px;">✅ Estado</th>
-      <th style="text-align:left; padding:10px; border-bottom:2px solid #eaecef; font-size:16px;">📝 Tarea</th>
-      <th style="text-align:left; padding:10px; border-bottom:2px solid #eaecef; font-size:16px;">📅 Sprint</th>
-      <th style="text-align:left; padding:10px; border-bottom:2px solid #eaecef; font-size:16px;">📌 Notas</th>
+      <th style="text-align:left; padding:10px; border-bottom:2px solid #eaecef; font-size:16px;">Estado</th>
+      <th style="text-align:left; padding:10px; border-bottom:2px solid #eaecef; font-size:16px;">Tarea</th>
+      <th style="text-align:left; padding:10px; border-bottom:2px solid #eaecef; font-size:16px;">Sprint</th>
+      <th style="text-align:left; padding:10px; border-bottom:2px solid #eaecef; font-size:16px;">Notas</th>
     </tr>
   </thead>
   <tbody>
