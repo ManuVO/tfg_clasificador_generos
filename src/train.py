@@ -204,9 +204,29 @@ def main(
         project_config_path=project_config,
     )
 
-    sources_info = ", ".join(config_meta.get("sources", []))
+    project_root: Optional[Path] = None
+    if project_cfg_path := config_meta.get("project_config_path"):
+        project_root = Path(project_cfg_path).expanduser().resolve(strict=False).parent
+
+    def _format_path_for_display(path_str: str) -> str:
+        path_obj = Path(path_str).expanduser().resolve(strict=False)
+        for base in (project_root, Path.cwd()):
+            if base is None:
+                continue
+            try:
+                return str(path_obj.relative_to(base))
+            except ValueError:
+                continue
+        return str(path_obj)
+
+    formatted_sources = [_format_path_for_display(p) for p in config_meta.get("sources", [])]
+    sources_info = ", ".join(formatted_sources)
+
     if config_meta.get("resolved_with") == "explicit_config":
-        print(f"⚙️  Configuración cargada manualmente: {sources_info or config_path}")
+        manual_display = (
+            _format_path_for_display(config_path) if config_path else config_path
+        )
+        print(f"⚙️  Configuración cargada manualmente: {sources_info or manual_display}")
     else:
         dataset_name = config_meta.get("dataset") or "desconocido"
         print(
