@@ -136,12 +136,22 @@ Genera reportes (`classification_report.txt`, `confusion_matrix.png`) en el dire
 ---
 
 ## ⚡ Personalizar la configuración
-Configura datasets, parámetros de audio, augmentations, arquitectura y entrenamiento editando los YAML de `configs/`.  
+Configura datasets, parámetros de audio, augmentations, arquitectura y entrenamiento editando los YAML de `configs/`.
 
-Ejemplo:  
+Ejemplo:
 ```bash
 python src/train.py --config configs/mi_experimento.yaml
 ```
+
+### Ajustes recomendados para `gtzan`
+- **Augmentations en forma de onda (`augmentation.waveform`)** → se han rebajado las probabilidades a valores entre 0.3 y 0.4 para que cada clip tenga más frecuencia sin distorsiones extremas. Así la red aprende patrones limpios y, al mismo tiempo, mantiene algo de diversidad para generalizar.
+- **SpecAugment (`augmentation.spec_augment`)** → ahora aplica menos máscaras (2 de frecuencia, 3 temporales) con un ancho moderado. Esto oculta partes del espectrograma para evitar sobreajuste, pero deja suficiente información para que la validación no se dispare.
+- **Épocas y tamaño de lote** → `training.epochs` sube a 40 y `batch_size` se mantiene en 32. Con lotes pequeños el optimizador ve más iteraciones por época y la paciencia extra permite que el aprendizaje estabilice antes de que el early stopping corte.
+- **Tasa de aprendizaje y weight decay** → `learning_rate` se fija en `1e-3` para arrancar más fuerte y `weight_decay` se reduce a `1e-4`. Este equilibrio acelera la caída de la pérdida de entrenamiento sin forzar demasiada penalización L2 que frene la capacidad del modelo.
+- **Scheduler** → `ReduceLROnPlateau` conserva un factor moderado (`0.5`) y amplía la `patience` a 3 con `threshold=0.005`. Solo baja el *LR* cuando la validación deja de mejorar de manera significativa, evitando reducciones prematuras.
+- **Early stopping** → `patience=10` y `min_delta=0.005` filtran mejoras marginales. El entrenamiento solo se detendrá cuando la validación esté estancada varios ciclos consecutivos.
+- **Semilla (`seed`)** → sigue en 42 para reproducibilidad. Cambiarla te permite comprobar la robustez del entrenamiento.
+- **Barra de progreso (`progress_bar`)** → permanece desactivada en la base y se activa únicamente en `configs/datasets/gtzan/training.yaml`. Puedes omitir esta clave en datasets donde no quieras barra; el código asume `false` si no existe.
 
 ---
 
@@ -154,9 +164,10 @@ Verifica con un audio sintético que la transformación a espectrograma funciona
 ---
 
 ## 📝 Notas adicionales
-- Los checkpoints se guardan en `experiments/`; el mejor modelo se guarda como `checkpoints/best_model.pt`.  
-- Ajusta `training.num_workers` si tu hardware limita hilos.  
-- Cambios en rutas/datasets → ejecutar de nuevo el preprocesado.  
+- Los checkpoints se guardan en `experiments/`; el mejor modelo se guarda como `checkpoints/best_model.pt`.
+- Ajusta `training.num_workers` si tu hardware limita hilos.
+- Controla la regularización L2 del optimizador con `training.weight_decay` (por defecto `1e-4`; fija `0.0` para desactivarla).
+- Cambios en rutas/datasets → ejecutar de nuevo el preprocesado.
 
 ---
 

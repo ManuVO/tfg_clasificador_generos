@@ -18,29 +18,29 @@ augmentation:
     AddGaussianNoise:
       min_amplitude: 0.001
       max_amplitude: 0.01
-      p: 0.3
+      p: 0.35
     TimeStretch:
       min_rate: 0.9
       max_rate: 1.1
-      p: 0.3
+      p: 0.35
     PitchShift:
       min_semitones: -3
       max_semitones: 3
-      p: 0.3
+      p: 0.35
     Shift:
       min_shift: -0.2
       max_shift: 0.2
-      p: 0.2
+      p: 0.3
     Gain:
       min_gain_db: -6.0
       max_gain_db: 6.0
-      p: 0.5
+      p: 0.4
   spec_augment:
     p: 0.5
     frequency_masks: 2
-    frequency_max_width: 18
-    time_masks: 2
-    time_max_width: 24
+    frequency_max_width: 24
+    time_masks: 3
+    time_max_width: 48
 
 model:
   name: cnn_baseline
@@ -48,18 +48,19 @@ model:
 
 training:
   epochs: 40
-  batch_size: 64
+  batch_size: 32
   learning_rate: 0.001
+  weight_decay: 0.0001
   num_workers: 2
   seed: 42
   progress_bar: false
   early_stopping:
-    patience: 8
-    min_delta: 0.0
+    patience: 10
+    min_delta: 0.005
   lr_scheduler:
     factor: 0.5
-    patience: 4
-    threshold: 0.001
+    patience: 3
+    threshold: 0.005
     min_lr: 0.000001
 
 reports:

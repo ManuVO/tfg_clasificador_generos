@@ -204,9 +204,29 @@ def main(
         project_config_path=project_config,
     )
 
-    sources_info = ", ".join(config_meta.get("sources", []))
+    project_root: Optional[Path] = None
+    if project_cfg_path := config_meta.get("project_config_path"):
+        project_root = Path(project_cfg_path).expanduser().resolve(strict=False).parent
+
+    def _format_path_for_display(path_str: str) -> str:
+        path_obj = Path(path_str).expanduser().resolve(strict=False)
+        for base in (project_root, Path.cwd()):
+            if base is None:
+                continue
+            try:
+                return str(path_obj.relative_to(base))
+            except ValueError:
+                continue
+        return str(path_obj)
+
+    formatted_sources = [_format_path_for_display(p) for p in config_meta.get("sources", [])]
+    sources_info = ", ".join(formatted_sources)
+
     if config_meta.get("resolved_with") == "explicit_config":
-        print(f"⚙️  Configuración cargada manualmente: {sources_info or config_path}")
+        manual_display = (
+            _format_path_for_display(config_path) if config_path else config_path
+        )
+        print(f"⚙️  Configuración cargada manualmente: {sources_info or manual_display}")
     else:
         dataset_name = config_meta.get("dataset") or "desconocido"
         print(
@@ -229,6 +249,7 @@ def main(
     epochs = int(training_cfg.get("epochs", 1))
     batch_size = int(training_cfg.get("batch_size", 1))
     lr = float(training_cfg.get("learning_rate", 1e-3))
+    weight_decay = float(training_cfg.get("weight_decay", 0.0))
     num_classes = int(config["model"]["num_classes"])
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -264,7 +285,7 @@ def main(
         raise NotImplementedError(f"Modelo {model_name} no soportado todavía")
     model = CNNBaseline(n_classes=num_classes).to(device)
 
-    opt = optim.Adam(model.parameters(), lr=lr)
+    opt = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     crit = nn.CrossEntropyLoss()
 
     scheduler_cfg = training_cfg.get("lr_scheduler", {})
