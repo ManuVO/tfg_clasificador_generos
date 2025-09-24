@@ -355,14 +355,20 @@ def main(
         total_correct = 0
         total_samples = 0
 
+        progress_bar = None
         train_iterator: Iterable = train_dl
         if progress_bar_enabled:
-            train_iterator = tqdm(
+            progress_bar = tqdm(
                 train_dl,
                 desc=f"Época {epoch}/{epochs}",
                 unit="batch",
-                leave=False,
+                dynamic_ncols=True,
+                mininterval=0.1,
+                smoothing=0.1,
+                leave=True,
+                bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]",
             )
+            train_iterator = progress_bar
 
         for xb, yb in train_iterator:
             xb, yb = xb.to(device), yb.to(device)
@@ -377,14 +383,21 @@ def main(
             total_correct += (logits.argmax(1) == yb).sum().item()
             total_samples += batch
 
-            if progress_bar_enabled:
-                train_iterator.set_postfix(
-                    loss=f"{loss.item():.4f}",
-                    lr=f"{opt.param_groups[0]['lr']:.2e}",
+            if progress_bar is not None:
+                avg_loss = total_loss / max(total_samples, 1)
+                avg_acc = total_correct / max(total_samples, 1)
+                progress_bar.set_postfix(
+                    {
+                        "batch_loss": f"{loss.item():.4f}",
+                        "avg_loss": f"{avg_loss:.4f}",
+                        "avg_acc": f"{avg_acc:.3f}",
+                        "lr": f"{opt.param_groups[0]['lr']:.2e}",
+                    },
+                    refresh=True,
                 )
 
-        if progress_bar_enabled:
-            train_iterator.close()
+        if progress_bar is not None:
+            progress_bar.close()
 
         train_loss = total_loss / max(total_samples, 1)
         train_acc = total_correct / max(total_samples, 1)
