@@ -25,11 +25,7 @@ Estos hitos permiten orientar el progreso general sin detallar todas las tareas 
 
 ## 📑 Metodología y organización
 
-El trabajo se gestiona siguiendo la metodología ágil **SCRUM**, que divide el desarrollo en **sprints** cortos con entregas incrementales.  
-
-Para visualizar el progreso se utiliza un tablero **Kanban**, con columnas «Por hacer», «En progreso», «En revisión» y «Hecho».  
-
-Las tareas se crean a partir de **historias de usuario** que describen requisitos funcionales y técnicos.  
+El trabajo se gestiona siguiendo la metodología ágil **SCRUM**, que divide el desarrollo en **sprints** cortos con entregas incrementales. Para visualizar el progreso se utiliza un tablero **Kanban**, con columnas «Por hacer», «En progreso», «En revisión» y «Hecho». Las tareas se crean a partir de **historias de usuario** que describen requisitos funcionales y técnicos.  
 
 A continuación se ofrece una visión general del **backlog actual**, incluyendo las tareas completadas y las planificadas.
 
