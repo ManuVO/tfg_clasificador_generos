@@ -1,0 +1,536 @@
+% main.tex — Resumen & Abstract con estilo UCAM (comentado)
+% Compila con XeLaTeX/LuaLaTeX (Arial real) o con PDFLaTeX (fallback Helvetica)
+
+\documentclass[12pt,twoside]{article}
+
+% ----------------- Página y márgenes -----------------
+\usepackage[a4paper,left=3cm,right=3cm,top=2.5cm,bottom=2.5cm]{geometry}
+\usepackage{microtype}
+
+% ----------------- Detección del motor -----------------
+\usepackage{iftex}
+\ifPDFTeX
+  % ---- PDFLaTeX: fallback sans-serif (Helvetica) ----
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage[spanish,es-noquoting,es-tabla]{babel}
+  \usepackage[scaled=0.95]{helvet}
+  \renewcommand{\familydefault}{\sfdefault} % “simula” Arial con Helvetica
+\else
+  % ---- XeLaTeX/LuaLaTeX: Arial real ----
+  \usepackage{fontspec}
+  \setmainfont{Arial} % <<<<<<<<<< NO TOCAR si compilas con XeLaTeX/LuaLaTeX
+  \usepackage{polyglossia}
+  \setmainlanguage{spanish}
+\fi
+
+% ----------------- Interlineado y color -----------------
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{xcolor}
+\definecolor{UCAMBlue}{HTML}{1F4E79}
+
+% ----------------- Estilo de títulos -----------------
+\usepackage{titlesec}
+% Nivel I: mayúsculas, negrita, azul
+\titleformat{\section}{\bfseries\color{UCAMBlue}\normalsize}{\thesection.}{0.6em}{\MakeUppercase}
+% Nivel II: negrita, azul
+\titleformat{\subsection}{\bfseries\color{UCAMBlue}\normalsize}{\thesubsection.}{0.6em}{}
+% Nivel III: cursiva, azul
+\titleformat{\subsubsection}{\itshape\color{UCAMBlue}\normalsize}{\thesubsubsection.}{0.6em}{}
+\titlespacing*{\section}{0pt}{*4}{*1.5}
+\titlespacing*{\subsection}{0pt}{*2}{*1.0}
+\titlespacing*{\subsubsection}{0pt}{*2}{*1.0}
+
+% Secciones de nivel I comienzan en página impar
+\usepackage{etoolbox}
+\pretocmd{\section}{\cleardoublepage}{}{}
+
+% ----------------- Párrafo y encabezados -----------------
+\setlength{\parindent}{1.25em}
+\setlength{\parskip}{0pt}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+
+% ====== Tablas que no se desbordan: usa tabularx + booktabs ======
+% Añade en el preámbulo (si aún no lo tienes):
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{array}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+
+% >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+% PERSONALIZA AQUÍ ENCABEZADOS (Arial 11, alumno en pares / título en impares)
+% Sustituye "Nombre Apellido" por tu nombre completo
+% Sustituye "Clasificador de géneros musicales con redes neuronales" por un título abreviado
+\fancyhead[LE]{\fontsize{11}{13}\selectfont \thepage\hspace{0.8em}Nombre Apellido}
+\fancyhead[RO]{\fontsize{11}{13}\selectfont Clasificador de géneros musicales con redes neuronales\hspace{0.8em}\thepage}
+% <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+% ----------------- Hiperenlaces -----------------
+\usepackage[hidelinks]{hyperref}
+
+% ----------------- Entornos de palabras clave -----------------
+\newenvironment{keywords}{\par\noindent\textbf{Palabras clave: }\ignorespaces}{\par}
+\newenvironment{keywordsEN}{\par\noindent\textbf{Keywords: }\ignorespaces}{\par}
+
+% ----------------- Portada simple -----------------
+\newcommand{\PortadaUCAM}{
+\begin{titlepage}
+    \centering
+    {\Large \textbf{TRABAJO FIN DE GRADO}\par}
+    \vspace{0.8cm}
+    {\large \textbf{ESCUELA UNIVERSITARIA POLITÉCNICA}\par}
+    {\normalsize Grado en Ingeniería Informática\par}
+    \vspace{1.4cm}
+    {\Large \textbf{CLASIFICADOR AUTOMÁTICO DE GÉNEROS MUSICALES}\\[0.4em]
+     \textbf{BASADO EN REDES NEURONALES}\par}
+    \vfill
+    % >>>>>>>> PERSONALIZA AQUÍ AUTOR/DIRECTOR/FECHA <<<<<<<<
+    {\normalsize \textit{Autor:} Nombre Apellido\par}      % <--- tu nombre
+    {\normalsize \textit{Director:} Nombre Director\par}    % <--- tu director/a
+    \vspace{0.6cm}
+    {\normalsize Murcia, mes de 2025\par}                   % <--- ciudad y fecha
+\end{titlepage}
+}
+
+\begin{document}
+
+% ----------------- FRONT-MATTER (sin numeración visible) -----------------
+\pagenumbering{gobble}
+\PortadaUCAM
+
+% Si tu guía exige 3 páginas en blanco + portada bis, DESCOMENTA estas líneas:
+% \newpage\null\thispagestyle{empty}\newpage
+% \newpage\null\thispagestyle{empty}\newpage
+% \newpage\null\thispagestyle{empty}\newpage
+% \PortadaUCAM % (Portada bis; puedes poner aquí una versión con logotipo a color)
+
+% (Opcional) Índices y prefacios. Si los necesitas, insértalos aquí:
+% \section*{Índice}\tableofcontents\cleardoublepage
+% \section*{Índice de figuras}\listoffigures\cleardoublepage
+% \section*{Índice de tablas}\listoftables\cleardoublepage
+% \section*{Agradecimientos} ...
+% \section*{Listado de abreviaturas} ...
+
+% -------------- Resumen y Abstract antes de Introducción --------------
+% >>>>>>>> AQUÍ PEGAS TU RESUMEN EN ESPAÑOL <<<<<<<<
+\section*{Resumen}
+Este Trabajo Fin de Grado presenta el diseño y desarrollo de un \textbf{clasificador automático de géneros musicales} basado en \textbf{redes neuronales}. El sistema sigue una canalización en \textbf{tres partes}: (1) \textbf{entrada} de un archivo de audio; (2) \textbf{análisis} mediante un modelo de IA que infiere el \textbf{género musical}; y (3) \textbf{salida} en pantalla con la \textbf{predicción}. El desarrollo se estructura en \textbf{tres fases}: \textbf{preprocesamiento} de datasets de audio (normalización, remuestreo y \textbf{extracción de características} como \textbf{MFCC} y \textbf{espectrogramas log-mel}), \textbf{entrenamiento} del modelo (selección de hiperparámetros, regularización y validación) y \textbf{inferencia} sobre \textbf{audios externos} replicando el mismo preprocesado.
+
+Se emplean \textbf{datasets públicos de referencia} (p.~ej., GTZAN) y se evalúa el rendimiento con métricas estándar (\textbf{accuracy}, \textbf{F1 macro}) bajo particiones de entrenamiento/validación/prueba. Las contribuciones principales son: (i) una \textbf{canalización reproducible} de preprocesamiento--entrenamiento--inferencia; (ii) un \textbf{clasificador neuronal} para audio musical; y (iii) una \textbf{herramienta de uso} que, dada una pista de audio, devuelve el \textbf{género} estimado. Se discuten limitaciones (sesgo de datos, ambigüedad de etiquetas) y vías futuras (mejoras de datos, arquitectura y robustez).
+
+\begin{keywords}
+% >>>>>>>> PALABRAS CLAVE EN ESPAÑOL (separadas por ;) <<<<<<<<
+clasificación musical; géneros musicales; aprendizaje profundo; redes neuronales; MFCC; espectrograma log-mel; audio digital.
+\end{keywords}
+
+% >>>>>>>> AQUÍ PEGAS TU ABSTRACT EN INGLÉS <<<<<<<<
+\section*{Abstract}
+This Bachelor’s Thesis presents the design and development of an \textbf{automatic music-genre classifier} based on \textbf{neural networks}. The system implements a three-part pipeline: (1) \textbf{input} of an audio file; (2) \textbf{analysis}, where an AI model infers the \textbf{music genre}; and (3) \textbf{output} of the predicted label. The project is carried out in \textbf{three phases}: \textbf{audio dataset preprocessing} (normalization, resampling, and \textbf{feature extraction} such as \textbf{MFCCs} and \textbf{log-mel spectrograms}), \textbf{model training} (hyperparameter tuning, regularization, and validation), and \textbf{inference} on \textbf{external audio} with identical preprocessing.
+
+We rely on \textbf{public benchmark datasets} (e.g., GTZAN) and report performance using standard metrics (\textbf{accuracy}, \textbf{macro-F1}) under train/validation/test splits. The main contributions are: (i) a \textbf{reproducible pipeline} spanning preprocessing--training--inference; (ii) a \textbf{neural-network-based audio classifier}; and (iii) a \textbf{user-facing tool} that returns the estimated \textbf{music genre} for a given track. Limitations (data bias, label ambiguity) and future work (data, architecture, robustness) are discussed.
+
+\begin{keywordsEN}
+% >>>>>>>> KEYWORDS EN INGLÉS (separadas por ;) <<<<<<<<
+music classification; music genres; deep learning; neural networks; MFCC; log-mel spectrogram; digital audio.
+\end{keywordsEN}
+
+% -------------- Aquí empieza la parte con numeración visible --------------
+\cleardoublepage
+\pagenumbering{arabic}
+
+% (OPCIONAL para normativa estricta UCAM)
+% Si quieres que la INTRODUCCIÓN muestre un número de página que
+% cuente las hojas anteriores (portadas, blancos, índices, resúmenes, etc.),
+% AJUSTA manualmente el contador en la línea de abajo.
+% Por ejemplo, si antes has metido 10 páginas, usa \setcounter{page}{11}.
+% \setcounter{page}{11}  % <<--- Ajusta si tu guía lo exige
+
+% >>>>>>>> AQUÍ COMIENZA EL CAPÍTULO 1 <<<<<<<<
+% ----------------- Capítulo 1: Introducción -----------------
+
+\section{Introducción}
+
+La clasificación automática de \textbf{géneros musicales} es un problema con impacto directo en la \textbf{organización}, la \textbf{búsqueda} y la \textbf{recomendación} de contenidos sonoros. La industria musical y el consumo digital han crecido hasta niveles en los que el etiquetado manual resulta \textbf{costoso}, \textbf{lento} y propenso a \textbf{inconsistencias}: distintos catalogadores pueden asignar géneros diferentes a una misma pista, y mantener esa coherencia a gran escala es complejo. Al mismo tiempo, los avances en \textit{aprendizaje profundo} han demostrado que es posible aprender patrones sonoros que ayudan a \textbf{automatizar} esta tarea con criterios reproducibles y evaluables.
+
+Este Trabajo Fin de Grado (TFG) presenta el diseño, desarrollo y evaluación de un \textbf{clasificador de géneros musicales} basado en \textbf{redes neuronales}. La idea central es sencilla de enunciar: dada una pista de audio, la herramienta \textbf{estima a qué género pertenece}. Para lograrlo, se parte de una representación del sonido que resulte informativa para el modelo y se comprueba su rendimiento con métricas claras y comprensibles. El enfoque busca un equilibrio entre \textbf{rigor técnico} y \textbf{simplicidad de uso}, de manera que el sistema sea útil como punto de partida para futuros desarrollos y, a la vez, suficientemente transparente para entender cómo y por qué ofrece una respuesta.
+
+\subsection{Motivación}
+
+Este trabajo nace de una combinación de necesidades prácticas y oportunidades tecnológicas:
+
+\begin{itemize}
+  \item \textbf{Escalabilidad y eficiencia.} El volumen actual de catálogos musicales impide mantener un etiquetado manual con tiempos razonables. Un sistema automático reduce el esfuerzo y acelera la organización.
+  \item \textbf{Consistencia.} Un procedimiento sistemático ayuda a disminuir la variabilidad entre catalogaciones, facilita la \textbf{auditoría} del proceso y permite repetir evaluaciones en el tiempo.
+  \item \textbf{Utilidad directa.} La etiqueta de género es un atributo básico para \textbf{filtrado}, \textbf{descubrimiento} y generación de \textbf{listas}; disponer de ella de forma automática mejora la experiencia de consulta y análisis.
+  \item \textbf{Madurez del ecosistema.} Existen librerías de \textbf{procesamiento de audio} y marcos de \textbf{deep learning} suficientemente robustos como para construir soluciones con buen balance entre rendimiento y mantenibilidad.
+\end{itemize}
+
+\subsection{Contexto y definición del problema}
+
+El problema que se aborda es el de \textbf{asignar a cada pista de audio una etiqueta de género} perteneciente a un conjunto finito definido por los datos de referencia. Se trata de un caso clásico de \textbf{clasificación supervisada}: a partir de ejemplos anotados, el sistema aprende a relacionar \textbf{patrones sonoros} con \textbf{categorías musicales}.
+
+La resolución de la tarea descansa en tres ideas prácticas. Primero, el audio debe transformarse en \textbf{representaciones} que capturen la información relevante para distinguir estilos (por ejemplo, descriptores espectrales habituales en la literatura). Segundo, sobre esas representaciones se entrena un \textbf{modelo neuronal} capaz de identificar regularidades y proponer una etiqueta. Y tercero, la calidad de la solución debe \textbf{medirse} con datos que el modelo no ha visto durante el entrenamiento y con \textbf{métricas estándar}, de forma que el resultado sea comparable y entendible.
+
+A lo largo del trabajo se han tenido en cuenta aspectos que influyen de manera directa en el rendimiento y la validez de las conclusiones: la \textbf{homogeneidad} en el tratamiento del audio, la \textbf{separación estricta} de los conjuntos de entrenamiento, validación y prueba, y la \textbf{documentación} de las decisiones adoptadas. También se reconocen las \textbf{limitaciones} propias del dominio, como la posible \textbf{ambigüedad} entre géneros cercanos o el \textbf{desequilibrio} de clases en los conjuntos de datos disponibles. Estas consideraciones no impiden avanzar; ayudan a interpretar mejor los resultados y a orientar mejoras futuras.
+
+\subsection{Objetivos}
+
+\noindent\textbf{Objetivo general}\\
+\textbf{Construir y comprobar} el funcionamiento de una herramienta que, a partir de una canción, \textbf{indique automáticamente su género musical}, utilizando \textbf{redes neuronales} y un tratamiento del audio coherente con la literatura actual.
+
+\vspace{0.5em}
+\noindent\textbf{Objetivos específicos}
+\begin{enumerate}
+  \item \textbf{Preparar} un conjunto de datos de trabajo \textbf{coherente y limpio}, aplicando el mismo criterio de tratamiento del audio para todas las pistas (niveles, muestreo y duración mínima).
+  \item \textbf{Elegir y justificar} una \textbf{representación del audio} sencilla y eficaz para esta tarea, dejando claros los parámetros para poder ajustarlos con facilidad cuando sea necesario.
+  \item \textbf{Diseñar y entrenar} un \textbf{modelo neuronal} que aprenda a distinguir los géneros definidos, incorporando buenas prácticas para evitar sobreajuste y validar el progreso.
+  \item \textbf{Evaluar} el comportamiento con un \textbf{conjunto de prueba independiente} y con \textbf{métricas comprensibles} (por ejemplo, precisión y F1 macro), \textbf{explicando} los errores más frecuentes y sus posibles causas.
+  \item \textbf{Presentar} una \textbf{aplicación de uso sencillo} que reciba una pista y devuelva el género estimado, aplicando el mismo tratamiento del audio que se usó en el entrenamiento.
+  \item \textbf{Documentar} las decisiones y dependencias para que el trabajo sea \textbf{reproducible} y fácil de mantener, de modo que pueda \textbf{crecer} con más datos o con nuevas configuraciones sin empezar de cero.
+  \item \textbf{Dejar una base escalable}: que resulte \textbf{fácil incorporar más datos} y, si se desea, \textbf{ampliar el número de géneros} sin rehacer el proyecto desde cero.
+\end{enumerate}
+
+\subsection{Estructura del documento}
+
+El documento se organiza del siguiente modo:
+\begin{itemize}
+  \item \textbf{Capítulo 2 — Estado del arte.} Se revisan los conceptos básicos del dominio musical y de IA, las \textbf{representaciones} de audio más utilizadas, los principales \textbf{enfoques de clasificación} y los \textbf{conjuntos de datos} de referencia, justificando las elecciones realizadas.
+  \item \textbf{Capítulo 3 — Metodología.} Se describen las metodologías de desarrollo consideradas y se argumenta la elección aplicada al proyecto.
+  \item \textbf{Capítulo 4 — Tecnologías y herramientas.} Se detallan los \textbf{entornos}, \textbf{librerías} y \textbf{recursos} utilizados para el desarrollo y las pruebas.
+  \item \textbf{Capítulo 5 — Estimación de recursos y planificación.} Se presenta la \textbf{planificación temporal} y la estimación del \textbf{esfuerzo}.
+  \item \textbf{Capítulo 6 — Desarrollo del proyecto.} Se documenta el proceso completo: preparación de datos, configuración del \textbf{modelo}, \textbf{entrenamiento} y resultados intermedios.
+  \item \textbf{Capítulo 7 — Despliegue y pruebas.} Se recoge el \textbf{plan de pruebas}, la verificación del funcionamiento y consideraciones de \textbf{mantenimiento}.
+  \item \textbf{Capítulo 8 — Conclusiones.} Se resumen los \textbf{resultados}, se discuten \textbf{limitaciones} y se proponen \textbf{líneas futuras}.
+\end{itemize}
+
+% ----------------- Capítulo 2: Estudio de mercado -----------------
+
+\section{Estudio de mercado}
+
+Este capítulo sitúa el proyecto en el \textbf{contexto actual} de la clasificación automática de géneros musicales. Se establecen los \textbf{conceptos clave} del dominio, se revisan las \textbf{representaciones de audio} y los \textbf{enfoques de clasificación} más utilizados, y se enmarca el \textbf{uso de datos y métricas} habituales para valorar soluciones. Con ello se ofrece una base objetiva para entender \textit{qué se conoce}, \textit{qué limitaciones persisten} y \textit{por qué} el enfoque adoptado resulta adecuado en relación con el estado del arte.
+
+\subsection{Conceptos relevantes del dominio de aplicación}
+
+La clasificación automática de género musical parte de una premisa sencilla: en el sonido grabado hay huellas del estilo —en cómo se distribuye la energía en frecuencia, en los patrones rítmicos, en la instrumentación y en la producción— que pueden hacerse explícitas mediante representaciones adecuadas y aprenderse con modelos supervisados. Para enmarcar correctamente la tarea, conviene fijar primero cómo se describe el audio digital, qué rasgos musicales se relacionan con los géneros, qué papel juegan los metadatos y bajo qué supuestos se formula el problema de clasificación.
+
+\subsubsection{Música digital y señal de audio}
+
+El audio musical que se procesa en este trabajo es el resultado de \textbf{muestrear} y \textbf{cuantizar} una señal analógica. La \textbf{frecuencia de muestreo} (p.~ej., 44{,}1 o 48~kHz) establece el techo de frecuencias que podemos representar con fidelidad; la \textbf{profundidad de bits} (16--24) condiciona el rango dinámico y el nivel de ruido de cuantización. En la práctica, los conjuntos de datos llegan con tasas y formatos heterogéneos; por coherencia, se convierte todo a una \textbf{tasa objetivo} única y se documenta el proceso para que sea repetible.
+
+La organización del material sonoro a lo largo del tiempo exige una unidad de análisis que equilibre detalle y contexto. Por ello se trabaja con \textbf{ventanas} breves y solapadas (del orden de decenas de milisegundos) que permiten asumir una cuasiestacionariedad local y describir la señal con transformadas o descriptores bien definidos. A partir de esas ventanas es habitual construir representaciones de mayor alcance (espectrogramas, secuencias de coeficientes) que capturen la evolución temporal.
+
+Antes de cualquier extracción de información, se aplican operaciones que reducen variabilidad ajena al contenido musical: \textbf{normalización de nivel} (evitando saturación), \textbf{remuestreo} a la tasa objetivo y, cuando procede, \textbf{mezcla a mono} para eliminar sesgos debido a panoramizaciones o efectos estéreo que no son relevantes para distinguir géneros. Estas decisiones no persiguen ``mejorar'' el audio, sino \textbf{hacerlo comparable} entre piezas y sesiones de grabación distintas.
+
+\subsubsection{Propiedades musicales relevantes para la clasificación}
+
+Los géneros no se definen por un único rasgo, sino por \textbf{familias de regularidades} que suelen combinarse:
+
+\begin{itemize}
+  \item \textbf{Timbre.} Es el ``color'' del sonido y está íntimamente ligado al \textbf{contenido espectral}: envolventes con más energía en agudos, presencia de formantes vocales, armónicos fuertes o saturación propia de determinadas guitarras o sintetizadores. Esta dimensión es la que con más claridad separa instrumentaciones y estéticas de producción.
+  \item \textbf{Ritmo y tempo.} La periodicidad, la acentuación y ciertos \textbf{patrones rítmicos} caracterizan estilos: baterías programadas con golpes regulares frente a \emph{grooves} sincopados, líneas de bombo marcadas o patrones de caja particulares. El tempo por sí solo rara vez decide, pero refuerza otras pistas.
+  \item \textbf{Armonía y tonalidad.} Las relaciones entre alturas y la \textbf{distribución de clases de nota} a lo largo del tiempo aportan contexto sobre progresiones y cadencias. Representaciones compactas del contenido armónico (p.~ej., \textbf{cromas}) ayudan a detectar regularidades de ciertos estilos.
+\end{itemize}
+
+Estas dimensiones se vuelven medibles cuando se proyectan en \textbf{dominios de representación} adecuados: la energía distribuida en bandas perceptuales, la evolución temporal de esa energía y resúmenes robustos a pequeñas variaciones de interpretación o mezcla (véase \S~2.2).
+
+\subsubsection{Metadatos y taxonomías de género}
+
+Cualquier sistema supervisado necesita \textbf{etiquetas}. En música, esas etiquetas pueden venir de campos \textbf{ID3}, anotaciones editoriales o contribuciones comunitarias. Esto introduce particularidades: (i) los géneros son \textbf{categorías con fronteras difusas}; (ii) las taxonomías suelen ser \textbf{jerárquicas} (género $\to$ subgénero), y una granularidad excesiva añade ruido; (iii) la \textbf{calidad de las etiquetas} condiciona el aprendizaje. En etapas iniciales es sensato trabajar con un \textbf{conjunto finito y estable} de géneros y verificar la coherencia mínima de las anotaciones.
+
+\subsubsection{Clasificación supervisada en el contexto musical}
+
+La tarea se formula como \textbf{clasificación supervisada}: a partir de pares $(x,y)$ donde $x$ es una representación del audio y $y$ la etiqueta de género, se aprende un modelo $f(x)$ que asigna a una pista nueva la categoría más plausible. Dos cuestiones prácticas marcan la diferencia entre una evaluación fiable y una ilusoria: (i) la \textbf{definición de la instancia} y la posible \textbf{agregación} por segmentos; (ii) la \textbf{validación honesta} con particiones de \emph{entrenamiento/validación/prueba} sin fugas (por artista, máster, etc.). Métricas como la \textbf{precisión (accuracy)} ofrecen una visión global; la \textbf{F1 macro} equilibra el peso de cada clase cuando hay desequilibrios y la \textbf{matriz de confusión} ayuda a entender qué estilos se confunden y por qué.
+
+\subsubsection{Consideraciones y supuestos de uso}
+
+Se asume que las pistas de entrada poseen \textbf{duración suficiente}; que los ficheros se pueden convertir a la \textbf{tasa objetivo} y formato de trabajo sin pérdida incompatible con la tarea; y que las \textbf{transformaciones y parámetros} aplicados en la preparación del audio se mantienen \textbf{idénticos} entre entrenamiento e inferencia. Bajo estas condiciones, el problema queda acotado y las comparaciones entre métodos tienen sentido.
+
+\subsection{Representaciones y características de audio}
+
+Elegir una buena representación es, en la práctica, decidir \textbf{qué} del sonido queremos que el modelo vea y \textbf{qué} preferimos ocultar. La onda tal cual contiene todo, pero también contingencias de grabación y mezcla. El objetivo aquí es fijar un \textbf{punto de vista estable} (invariante a pequeños cambios de nivel, microdesplazamientos o coloraciones poco relevantes) que conserve aquello que diferencia estilos: \textbf{timbre}, \textbf{patrones rítmicos} y, cuando aplica, \textbf{contenido armónico}.
+
+\subsubsection{Tiempo--frecuencia: de la STFT a ``imágenes'' útiles}
+
+El paso natural desde la onda es mirar cómo se reparte la \textbf{energía por frecuencias} a lo largo del tiempo. La \textbf{STFT} divide la señal en ventanas breves y, en cada una, calcula su espectro. La elección de \textbf{tamaño de ventana} y \textbf{salto} no es menor: ventanas largas separan bien frecuencias (útil para ver armónicos y envolventes tímbricas), pero difuminan eventos rápidos; ventanas cortas capturan transitorios y microgestos rítmicos, a costa de perder resolución espectral. Con la STFT obtenemos \textbf{espectrogramas}; conviene \textbf{comprimir amplitudes} (log) para evitar que unos pocos picos dominen. Esta representación se comporta como una \textbf{imagen}: texturas verticales (transitorios), horizontales (sostenidos), diagonales (glissandi), peines regulares (armónicos), ``nubes'' de energía de determinadas producciones. Esta ``visualidad'' abre la puerta a modelos que explotan \textbf{regularidades locales en 2D}.
+
+\subsubsection{Perceptuales: mel/log-mel, MFCC y cromas (y por qué se usan)}
+
+\textbf{(Log-)mel:} el banco de filtros \textbf{mel} redistribuye la energía en bandas que crecen en anchura según aumenta la frecuencia, aproximando la sensibilidad auditiva. El \textbf{mel-espectrograma} filtra detalles poco relevantes; su versión \textbf{log-mel} estabiliza el rango dinámico. Resultado: una \textbf{matriz 2D} muy alineada con lo que distinguimos como oyentes; funciona especialmente bien con \textbf{convolucionales}.
+
+\textbf{MFCC:} al aplicar una transformada coseno a log-mel se obtienen los \textbf{coeficientes cepstrales en Mel}, que condensan la forma global del espectro en un vector corto. Capturan \textbf{timbre promedio} con bajo coste, aunque pierden detalle fino; útiles como entrada ligera o complemento.
+
+\textbf{Cromas:} cuando la \textbf{tonalidad} y las \textbf{progresiones} discriminan estilos, las \textbf{cromas} proyectan la energía en 12 clases de nota, parcialmente independientes del timbre. Aportan una vista armónica que complementa al mel/log-mel.
+
+\medskip
+\noindent\textit{Resumen operativo:} para un clasificador generalista, \textbf{log-mel} como base 2D es un punto de partida sólido; \textbf{MFCC} aportan ligereza y timbre promedio; \textbf{cromas} suman discriminación armónica. Combinar dos suele equilibrar mejor que apostar por uno solo.
+
+\subsubsection{Preparación, normalización y longitud: lo pequeño que decide lo grande}
+
+Proyectos idénticos en arquitectura pueden divergir por \textbf{detalles de preparación}. Por eso se unifican \textbf{tasa de muestreo} y formato, se controla el \textbf{nivel} y se decide cómo gestionar la \textbf{longitud}: recortes a duración fija, \textbf{padding} controlado o agregación de fragmentos por pista. Tras extraer mel/log-mel o cromas, conviene una \textbf{normalización estadística} consistente (media/desviación del conjunto de entrenamiento). Cambiar una ventana de 25 a 40~ms, pasar de 64 a 128 bandas mel o normalizar por pista en lugar de por conjunto puede mover varios puntos de métrica: no son afinaciones menores, son \textbf{decisiones de diseño}.
+
+\paragraph{Aspectos puntuales} \mbox{}\\[-0.8em]
+\begin{itemize}
+  \item \textbf{Señales en el dominio temporal.} Indicadores como \textbf{RMS} o \textbf{ZCR} son útiles para control de calidad, detección de actividad o segmentación inicial. Como única base para el género, suelen quedarse cortos por su escaso poder tímbrico y estructural.
+  \item \textbf{Aumento de datos (data augmentation).} Conjuntos desbalanceados se benefician de variaciones \textbf{realistas}: ligeros cambios de ganancia, pequeños estiramientos temporales, enmascaramientos de tiempo/frecuencia o añadidos de ruido suave. La regla: respetar las \textbf{invariancias} del género.
+\end{itemize}
+
+\subsubsection{Criterios de elección (qué usar y cuándo)}
+
+\begin{itemize}
+  \item Equilibrio precisión/coste y modelos 2D $\Rightarrow$ \textbf{log-mel}.
+  \item Entrada ligera o capa adicional de timbre promedio $\Rightarrow$ \textbf{MFCC}.
+  \item Corpus con rasgos armónicos distintivos $\Rightarrow$ añadir \textbf{cromas}.
+  \item Con más presupuesto, explorar \textbf{combinaciones} (p.~ej., log-mel + cromas) aporta robustez.
+  \item En cualquier caso, documentar \textbf{parámetros} (ventana, \emph{hop}, $n_{\text{mel}}$, escalados) y mantener \textbf{consistencia} entre entrenamiento e inferencia garantiza resultados \textbf{repetibles}.
+\end{itemize}
+
+\subsection{Relación con proyectos con la misma funcionalidad}
+
+La clasificación de género musical está presente en \textbf{prototipos y bibliotecas abiertas}, en \textbf{corpora públicos} y en \textbf{servicios industriales}. A continuación se destacan referencias concretas y lo que aportan para un sistema que extrae características, entrena una red y evalúa/infiere sobre audio nuevo.
+
+\subsubsection{Prototipos y bibliotecas abiertas}
+
+\textbf{musicnn (MTG/UPF).} Redes \textbf{convolucionales} preentrenadas para \emph{music tagging} sobre \textbf{(log-)mel}, con modelos listos para inferencia y ejemplos de uso. Útil como referencia de \textbf{pipeline reproducible} y como extractor de \emph{embeddings} o punto de partida para \emph{fine-tuning}.
+
+\textbf{Essentia.} Librería C++/Python de MIR que cubre desde \textbf{procesado básico} (MFCC, cromas, mel) hasta \textbf{inferencia de modelos} con pesos publicados. Acelera la \textbf{extracción de características} y aporta guías de \textbf{normalización} y empaquetado de \textbf{inferencia}.
+
+\medskip
+\noindent\textit{Qué nos llevamos:} buenas prácticas de \textbf{preprocesado} (resampleo, ventana, \emph{hop}, escalado), uso de \textbf{representaciones perceptuales} y ejemplos de \textbf{convolucionales 2D} para audio.
+
+\subsubsection{Corpora y recursos públicos}
+
+\textbf{MagnaTagATune (MTAT).} Clips de $\sim$30~s con \textbf{etiquetas humanas} recogidas vía juego; clásico para \emph{tagging} y comparativas (útil para estudiar \textbf{ruido} de etiquetas y \textbf{equilibrio} de clases).
+
+\textbf{Million Song Dataset (MSD) + Last.fm tags.} Un millón de pistas con \textbf{metadatos} y etiquetas a nivel de canción (incluidos géneros), habitual en trabajos de caracterización y recomendación.
+
+\textbf{AudioSet.} Ontología de cientos de clases y millones de clips etiquetados; abarca \textbf{instrumentos}, \textbf{eventos} y \textbf{géneros}. Se emplea para \textbf{preentrenar} modelos que luego se especializan en tareas musicales.
+
+\subsubsection{Servicios industriales y productos reales}
+
+\textbf{Spotify (Web API).} Expone \textbf{audio features} (tempo, energy, valence, etc.) y \textbf{``genre seeds''} para recomendaciones. Aunque los clasificadores internos no son públicos, estas interfaces evidencian que \textbf{género} y \textbf{rasgos de audio} son atributos operativos de primer nivel y que existen \textbf{taxonomías mantenidas} a gran escala.
+
+\textbf{Google/YouTube.} La investigación en \textbf{AudioSet} ha permeado productos y servicios: el patrón \textbf{preentrenamiento masivo + especialización} es frecuente con audio heterogéneo. Para un clasificador de géneros, esto sugiere opciones de \emph{transfer learning} y la conveniencia de \textbf{datasets amplios y diversos} cuando se busque robustez.
+
+\medskip
+\noindent\textit{Lecciones de operación:} en producción se priorizan \textbf{ingestión a escala}, \textbf{actualización continua} de modelos, \textbf{monitorización} de sesgos y \textbf{trazabilidad}. Incluso en un TFG conviene separar \textbf{extracción} $\to$ \textbf{entrenamiento} $\to$ \textbf{inferencia}, fijar \textbf{semillas} y documentar \textbf{parámetros}.
+
+\subsubsection{Convergencia técnica en la literatura}
+
+Los últimos años muestran una convergencia: \textbf{CNN/CRNN} sobre \textbf{(log-)mel} como línea base sólida para etiquetado musical (género incluido), con protocolos de evaluación que evitan \textbf{fugas} entre particiones y reportan \textbf{accuracy} junto a \textbf{F1 macro}. Esta combinación equilibra \textbf{expresividad}, \textbf{robustez} y \textbf{coste}.
+
+\subsubsection{Decisiones aplicables al presente trabajo}
+
+\begin{itemize}
+  \item \textbf{Extracción:} \textbf{log-mel} como base; \textbf{MFCC} y \textbf{cromas} como complementos según el corpus. Implementación apoyada en bibliotecas consolidadas para asegurar \textbf{reproducibilidad}.
+  \item \textbf{Entrenamiento:} arquitecturas \textbf{convolucionales} con validación honesta y control de sobreajuste; registro de \textbf{semillas}, \textbf{versiones} y \textbf{parámetros}.
+  \item \textbf{Evaluación e inferencia:} particiones \textbf{train/val/test} sin fugas (idealmente por \textbf{artista}), métricas \textbf{accuracy} y \textbf{F1 macro}, y \textbf{matriz de confusión} para interpretar errores; diseño de inferencia compatible con pipelines de recomendación (género como atributo).
+\end{itemize}
+
+% ----------------- 2.4 Estudio de viabilidad -----------------
+
+\section{Estudio de viabilidad}\label{sec:viabilidad}
+
+Este apartado comprueba que la solución propuesta es \textbf{pertinente}, \textbf{factible} con recursos realistas y \textbf{sostenible} a futuro. Primero se acota el \textbf{alcance} (qué entra y qué no), después se \textbf{valoran alternativas} tecnológicas con criterios objetivos (calidad, coste, esfuerzo de mantenimiento, escalabilidad) y, finalmente, se \textbf{selecciona} la combinación más coherente con los objetivos del proyecto.
+
+\subsection{Alcance del proyecto}\label{subsec:viabilidad-alcance}
+
+\textbf{Propósito.} Desarrollar un sistema que, a partir del contenido de una pista de audio, \textbf{estime su género musical} dentro de un conjunto finito de clases, ofreciendo resultados \textbf{reproducibles} y \textbf{comparables}.
+
+\textbf{Entradas y salidas.}
+\begin{itemize}
+  \item \textbf{Entrada:} ficheros WAV/MP3 convertibles a una \textbf{tasa de muestreo objetivo}; duración suficiente para que exista evidencia musical (evitando silencios prolongados o tramos ajenos a la música).
+  \item \textbf{Salida:} \textbf{etiqueta de género} y, opcionalmente, \textbf{probabilidades} por clase para análisis y diagnóstico.
+\end{itemize}
+
+\textbf{Hipótesis de trabajo.}
+\begin{itemize}
+  \item El preprocesado (normalización, remuestreo, segmentación) \textbf{no destruye} información discriminativa.
+  \item Las \textbf{etiquetas} de los datasets de referencia son razonablemente coherentes para entrenar y evaluar.
+  \item Se dispone de \textbf{recursos académicos} (CPU/GPU moderada) y de un entorno Python estándar.
+\end{itemize}
+
+\textbf{Dentro del alcance (fase actual).}
+\begin{itemize}
+  \item Representaciones \textbf{perceptuales} del audio (mel/log-mel) como base; \textbf{MFCC} y \textbf{cromas} como complementos evaluables.
+  \item Clasificador \textbf{neuronal} (CNN 2D ligera; variante \textbf{CRNN} si los datos lo justifican).
+  \item \textbf{Evaluación} con \textit{accuracy}, \textbf{F1 macro} y \textbf{matriz de confusión}; \textbf{inferencia} que replica exactamente el preprocesado del entrenamiento.
+\end{itemize}
+
+\textbf{Fuera del alcance (fase actual).}
+\begin{itemize}
+  \item Etiquetado \textbf{multi-género} o taxonomías jerárquicas completas.
+  \item Requisitos estrictos de \textbf{tiempo real} o despliegues móviles/embebidos.
+  \item Curación legal de catálogos masivos o armonización editorial de metadatos.
+\end{itemize}
+
+\textbf{Riesgos principales y mitigación.}
+\begin{itemize}
+  \item \textbf{Desequilibrio de clases:} particiones estratificadas, uso de \textbf{F1 macro} y \textit{augmentation} prudente.
+  \item \textbf{Ruido de etiquetas / ambigüedad de género:} muestreo manual de calidad, análisis de confusión y revisión de casos frontera.
+  \item \textbf{Sobreajuste:} \textit{early stopping}, regularización y separación estricta \textbf{train/val/test} (idealmente evitando cruce de artistas).
+  \item \textbf{Fugas entre particiones:} control por artista/álbum cuando sea posible y verificación automática de duplicados.
+\end{itemize}
+
+\subsection{Estudio y valoración de las alternativas de solución}\label{subsec:viabilidad-alternativas}
+
+A continuación se comparan, de forma separada, las decisiones clave del sistema. Cada bloque incluye definiciones breves, una tabla comparativa y una conclusión operativa.
+
+\paragraph*{Representación del audio}
+\addcontentsline{toc}{paragraph}{Representación del audio}
+
+\textit{Qué resuelve.} Convertir la onda en una \textbf{vista estable e informativa} que conserve señales de \textbf{timbre}, \textbf{patrones rítmicos} y, si procede, \textbf{armonía}. \textit{Conceptos rápidos:}
+\textbf{mel/log-mel} (energía por bandas en escala perceptual; con \textbf{log} se comprime el rango dinámico),
+\textbf{MFCC} (transformada coseno sobre log-mel; “timbre promedio” en pocos coeficientes) y
+\textbf{cromas} (energía proyectada en 12 clases de nota; resumen armónico/tonal).
+
+\begin{table}[h!]
+  \centering
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{1.2}
+  \footnotesize
+  \begin{tabularx}{\textwidth}{l Y Y C Y}
+    \toprule
+    \textbf{Representación} & \textbf{Ventajas} & \textbf{Limitaciones} & \textbf{Coste} & \textbf{Cuándo usarla} \\
+    \midrule
+    \textbf{Mel / log-mel} & Alineada con la \textbf{percepción}; eficaz con \textbf{CNN/CRNN}; captura timbre + gestos rítmicos & Requiere ajustar ventana/\textit{hop}; mayor coste que MFCC & Medio & \textbf{Base principal} en clasificación de género \\
+    \textbf{MFCC} & \textbf{Compactos} y rápidos; buen “timbre promedio” & Pierden \textbf{detalle 2D} y contexto temporal fino & Bajo & \textbf{Canal ligero} o \textit{baseline}; complemento a mel \\
+    \textbf{Cromas} & Aportan \textbf{armonía/tonalidad}; complementan mel/log-mel & Poco útiles cuando el género es más \textbf{textural/production-driven} & Bajo--Medio & \textbf{Segundo canal} si el corpus muestra señales armónicas claras \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\textit{Conclusión.} Adoptar \textbf{log-mel} como \textbf{base}; \textbf{MFCC} y \textbf{cromas} se incorporarán sólo si aportan \textbf{mejora consistente} en el corpus elegido.
+
+\paragraph*{Arquitectura del modelo}
+\addcontentsline{toc}{paragraph}{Arquitectura del modelo}
+
+\textit{Qué resuelve.} Aprender funciones que separen géneros a partir de la representación.
+
+\begin{table}[h!]
+  \centering
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{1.2}
+  \footnotesize
+  \begin{tabularx}{\textwidth}{l Y Y Y}
+    \toprule
+    \textbf{Alternativa} & \textbf{Fortalezas} & \textbf{Debilidades} & \textbf{Idoneidad} \\
+    \midrule
+    \textbf{SVM/k-NN + MFCC} & Simplicidad, rapidez, reproducibles & Techo de rendimiento inferior; ignoran estructura 2D/temporal & \textbf{Línea base} comparativa \\
+    \textbf{CNN 2D sobre log-mel} & Aprende \textbf{texturas 2D}; excelente relación \textbf{precisión/coste} & Memoria temporal limitada (según ventana) & \textbf{Opción principal} \\
+    \textbf{CRNN (CNN + recurrente)} & Añade \textbf{memoria temporal} para dependencias largas & Más compleja; riesgo de sobreajuste en datasets pequeños & \textbf{Variante} si hay datos/tiempo \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\textit{Conclusión.} Empezar con \textbf{CNN 2D ligera} y evaluar una \textbf{CRNN} si la diversidad del dataset lo justifica y se observa ganancia tangible.
+
+\paragraph*{Segmentación y estrategia de decisión}
+\addcontentsline{toc}{paragraph}{Segmentación y estrategia de decisión}
+
+\textit{Qué resuelve.} Reducir sensibilidad a intros/silencios y secciones atípicas.
+
+\begin{table}[h!]
+  \centering
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{1.2}
+  \footnotesize
+  \begin{tabularx}{\textwidth}{l Y Y C}
+    \toprule
+    \textbf{Estrategia} & \textbf{Pros} & \textbf{Contras} & \textbf{Decisión} \\
+    \midrule
+    \textbf{Pista completa} & Implementación muy simple & Susceptible a segmentos no representativos & --- \\
+    \textbf{Por segmentos + agregación} & \textbf{Robustez} a variaciones locales; decisiones más estables & Más cómputo; requiere coherencia de preprocesado & \textbf{Elegida} (promedio / voto) \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\textit{Conclusión.} Procesar ventanas/segmentos homogéneos y \textbf{agregar} (promedio o voto), manteniendo el mismo \textit{pipeline} en entrenamiento e inferencia.
+
+\paragraph*{Datasets candidatos}
+\addcontentsline{toc}{paragraph}{Datasets candidatos}
+
+\textit{Criterio.} Iterar primero con un conjunto \textbf{equilibrado y claro}; ampliar después para robustez.
+
+\begin{table}[h!]
+  \centering
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{1.2}
+  \footnotesize
+  \begin{tabularx}{\textwidth}{l C Y Y Y}
+    \toprule
+    \textbf{Dataset} & \textbf{Tamaño/Clases} & \textbf{Ventajas} & \textbf{Inconvenientes} & \textbf{Uso recomendado} \\
+    \midrule
+    \textbf{FMA-small} & 8\,000 clips/30 s; \textbf{8} géneros equilibrados & Licencia clara; comparabilidad; ideal para prototipado & Menos diverso que \textit{medium/large} & \textbf{Principal} (primera iteración) \\
+    \textbf{GTZAN} & 1\,000 clips/30 s; 10 géneros & Clásico; fácil de usar & Fallos documentados (duplicados, misetiquetado) & \textbf{Benchmark} secundario con \textit{splits} cuidados \\
+    \textbf{MagnaTagATune} & $\sim$30 s por clip; etiquetas humanas & Tamaño razonable; útil para \textit{tagging} & Etiquetas ruidosas; no centrado sólo en género & \textbf{Complemento} (robustez) \\
+    \textbf{MSD + Last.fm} & 1M pistas con \textit{tags} & \textbf{Escala} y diversidad & Audio no siempre accesible; etiquetas heterogéneas & \textbf{Futuro} (transfer/robustez) \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\textit{Conclusión.} Empezar con \textbf{FMA-small} por limpieza y equilibrio; contrastar con \textbf{GTZAN} bajo particiones controladas; plan de ampliación a \textbf{FMA-medium/large} y, a futuro, \textbf{MTAT/MSD} para generalización.
+
+\paragraph*{Protocolo de evaluación y métricas}
+\addcontentsline{toc}{paragraph}{Protocolo de evaluación y métricas}
+
+\textit{Qué resuelve.} Comparar de forma honesta y \textbf{diagnosticar} errores.
+
+\begin{table}[h!]
+  \centering
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{1.2}
+  \footnotesize
+  \begin{tabularx}{\textwidth}{l Y Y}
+    \toprule
+    \textbf{Elemento} & \textbf{Elección} & \textbf{Motivo} \\
+    \midrule
+    \textbf{Particionado} & \textbf{Train/Val/Test} estratificado; si es posible, separación por \textbf{artista} & Evitar \textbf{fugas} y medir \textbf{generalización} \\
+    \textbf{Métricas} & \textit{Accuracy} + \textbf{F1 macro} & \textit{Accuracy} resume; \textbf{F1 macro} equilibra clases desbalanceadas \\
+    \textbf{Análisis} & \textbf{Matriz de confusión} & Localiza \textbf{fronteras} entre géneros y guía mejoras \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\textit{Nota operativa.} Todos los parámetros de extracción (ventana, \textit{hop}, nº de bandas mel, escalado), semillas y versiones deben quedar \textbf{documentados} para que los resultados puedan \textbf{reproducirse}.
+
+\subsection{Selección de la solución}\label{subsec:viabilidad-seleccion}
+
+\textbf{Representación adoptada.} \;
+\textit{Base:} \textbf{log-mel} (64--128 bandas, compresión logarítmica, ventana/\textit{hop} documentados), por su equilibrio entre \textbf{información perceptual}, \textbf{robustez} y \textbf{coste}. \;
+\textit{Complementos evaluables:} \textbf{MFCC} (timbre promedio) y \textbf{cromas} (armonía) como canales adicionales si aportan mejora \textbf{consistente} en validación.
+
+\textbf{Modelo y decisión.} \;
+\textit{Arquitectura principal:} \textbf{CNN 2D ligera} sobre log-mel, diseñada para operar con \textbf{segmentos} y \textbf{agregación} de probabilidades (promedio o voto). \;
+\textit{Variante opcional:} \textbf{CRNN} si el tamaño/diversidad del conjunto final justifica capturar \textbf{dependencias temporales} más largas con ganancia medible.
+
+\textbf{Dataset y plan de crecimiento.} \;
+\textit{Primera iteración:} \textbf{FMA-small} (8 géneros equilibrados) para iterar rápido y fijar una línea base sólida. \;
+\textit{Ampliación:} \textbf{FMA-medium/large} y validación cruzada con \textbf{GTZAN} bajo \textit{splits} cuidadosos; a medio plazo, exploración de \textbf{MagnaTagATune}/\textbf{MSD} para robustez y \textit{transfer learning}.
+
+\textbf{Criterios de aceptación.}
+\begin{itemize}
+  \item \textbf{Reproducibilidad:} scripts de \textbf{preparación}, \textbf{entrenamiento} e \textbf{inferencia} con parámetros y semillas fijadas.
+  \item \textbf{Rendimiento:} \textbf{F1 macro} superior a la línea base clásica (MFCC + SVM/k-NN) y \textit{accuracy} acorde al estado del arte del dataset empleado.
+  \item \textbf{Trazabilidad:} registro de versiones y configuraciones para repetir resultados y auditar cambios.
+\end{itemize}
+
+\textbf{Justificación final.} La combinación \textbf{log-mel + CNN 2D} con decisión por \textbf{segmentos} proporciona el mejor \textbf{equilibrio} entre calidad, coste y mantenibilidad. Permite \textbf{crecer} en datos y clases sin rehacer el sistema y mantiene una ruta clara para mejorar (variantes CRNN, canales adicionales, ampliación de datasets) cuando se disponga de mayor volumen y diversidad de información.
+
+
+% >>>>>>>> AQUÍ IRÁ EL RESTO DE CAPÍTULOS <<<<<<<<
+% \section{Estado del arte}
+% ...
+% \section{Metodología}
+% ...
+% \section{Resultados y discusión}
+% ...
+% \section{Conclusiones}
+% ...
+
+\end{document}
